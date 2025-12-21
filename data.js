@@ -7,3 +7,17 @@ export const hotels = [
     { name: "V Hotel Lavender", price: 6883, cancelable: false, size: 16, note: "" },
     { name: "Hotel Classic by Venue", price: 4300, cancelable: true, size: 18, note: "部分無窗" }
 ];
+
+/**
+ * --- 填寫說明 ---
+ * 若要標註特定資訊，請在該飯店物件中新增對應屬性並設為 true。
+ * * 屬性名稱對照表：
+ * - isRedLightDistrict: true   (靠近紅燈區)
+ * - isPoorSoundproofing: true  (隔音較差)
+ * - hasSofaBed: true           (有沙發床)
+ * - hasNoBaggageStorage: true  (無行李寄放)
+ * - hasFewOutlets: true        (插座少)
+ * * 範例：
+ * { name: "範例飯店", price: 5000, ..., isRedLightDistrict: true }
+ * * 若未填寫（保持目前這樣），網頁卡片將統一顯示「未提供資訊」。
+ */
