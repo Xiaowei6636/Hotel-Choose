@@ -47,27 +47,27 @@
             <hr class="my-6 border-slate-100">
 
             <div>
-                <label class="block text-sm font-bold text-slate-700 mb-4 text-center md:text-left">進階特徵過濾 (顯示符合該特徵的飯店)</label>
+                <label class="block text-sm font-bold text-slate-700 mb-4 text-center md:text-left">優選條件過濾 (勾選將隱藏負面狀況或資訊不明者)</label>
                 <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
                     <div class="flex items-center p-2 bg-slate-50 rounded-lg border border-transparent hover:border-slate-200 transition-all">
-                        <input type="checkbox" id="redLightFilter" class="w-4 h-4 text-orange-600 border-slate-300 rounded">
-                        <label for="redLightFilter" class="ml-2 text-xs md:text-sm text-slate-600 cursor-pointer">🚩 靠近紅燈區</label>
+                        <input type="checkbox" id="safeAreaFilter" class="w-4 h-4 text-blue-600 border-slate-300 rounded focus:ring-blue-500">
+                        <label for="safeAreaFilter" class="ml-2 text-xs md:text-sm text-slate-600 cursor-pointer">✅ 不靠近紅燈區</label>
                     </div>
                     <div class="flex items-center p-2 bg-slate-50 rounded-lg border border-transparent hover:border-slate-200 transition-all">
-                        <input type="checkbox" id="poorSoundproofingFilter" class="w-4 h-4 text-orange-600 border-slate-300 rounded">
-                        <label for="poorSoundproofingFilter" class="ml-2 text-xs md:text-sm text-slate-600 cursor-pointer">🔇 隔音較差</label>
+                        <input type="checkbox" id="goodSoundFilter" class="w-4 h-4 text-blue-600 border-slate-300 rounded focus:ring-blue-500">
+                        <label for="goodSoundFilter" class="ml-2 text-xs md:text-sm text-slate-600 cursor-pointer">✅ 隔音良好</label>
                     </div>
                     <div class="flex items-center p-2 bg-slate-50 rounded-lg border border-transparent hover:border-slate-200 transition-all">
-                        <input type="checkbox" id="sofaBedFilter" class="w-4 h-4 text-orange-600 border-slate-300 rounded">
-                        <label for="sofaBedFilter" class="ml-2 text-xs md:text-sm text-slate-600 cursor-pointer">🛋️ 有沙發床</label>
+                        <input type="checkbox" id="realBedFilter" class="w-4 h-4 text-blue-600 border-slate-300 rounded focus:ring-blue-500">
+                        <label for="realBedFilter" class="ml-2 text-xs md:text-sm text-slate-600 cursor-pointer">✅ 非沙發床</label>
                     </div>
                     <div class="flex items-center p-2 bg-slate-50 rounded-lg border border-transparent hover:border-slate-200 transition-all">
-                        <input type="checkbox" id="noBaggageFilter" class="w-4 h-4 text-orange-600 border-slate-300 rounded">
-                        <label for="noBaggageFilter" class="ml-2 text-xs md:text-sm text-slate-600 cursor-pointer">🧳 無行李寄放</label>
+                        <input type="checkbox" id="hasBaggageFilter" class="w-4 h-4 text-blue-600 border-slate-300 rounded focus:ring-blue-500">
+                        <label for="hasBaggageFilter" class="ml-2 text-xs md:text-sm text-slate-600 cursor-pointer">✅ 可寄放行李</label>
                     </div>
                     <div class="flex items-center p-2 bg-slate-50 rounded-lg border border-transparent hover:border-slate-200 transition-all">
-                        <input type="checkbox" id="fewOutletsFilter" class="w-4 h-4 text-orange-600 border-slate-300 rounded">
-                        <label for="fewOutletsFilter" class="ml-2 text-xs md:text-sm text-slate-600 cursor-pointer">🔌 插座少</label>
+                        <input type="checkbox" id="plentyOutletsFilter" class="w-4 h-4 text-blue-600 border-slate-300 rounded focus:ring-blue-500">
+                        <label for="plentyOutletsFilter" class="ml-2 text-xs md:text-sm text-slate-600 cursor-pointer">✅ 插座充足</label>
                     </div>
                 </div>
             </div>
@@ -80,7 +80,7 @@
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="9.172 9.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
             <p class="text-lg font-medium">沒有符合條件的飯店</p>
-            <p class="text-sm">請調整篩選預算或取消部分勾選條件</p>
+            <p class="text-sm">請調整篩選預算或嘗試減少優選條件的勾選</p>
         </div>
     </div>
 

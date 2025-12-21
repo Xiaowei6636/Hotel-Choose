@@ -7,12 +7,12 @@ const priceDisplay = document.getElementById('priceDisplay');
 const sizeFilter = document.getElementById('sizeFilter');
 const cancelableOnly = document.getElementById('cancelableOnly');
 
-// 篩選控制項
-const redLightFilter = document.getElementById('redLightFilter');
-const poorSoundproofingFilter = document.getElementById('poorSoundproofingFilter');
-const sofaBedFilter = document.getElementById('sofaBedFilter');
-const noBaggageFilter = document.getElementById('noBaggageFilter');
-const fewOutletsFilter = document.getElementById('fewOutletsFilter');
+// 取得優選篩選控制項 (ID 已更新為正面表述)
+const safeAreaFilter = document.getElementById('safeAreaFilter');
+const goodSoundFilter = document.getElementById('goodSoundFilter');
+const realBedFilter = document.getElementById('realBedFilter');
+const hasBaggageFilter = document.getElementById('hasBaggageFilter');
+const plentyOutletsFilter = document.getElementById('plentyOutletsFilter');
 
 function renderHotels() {
     const maxPrice = parseInt(priceRange.value);
@@ -20,19 +20,22 @@ function renderHotels() {
     const showCancelableOnly = cancelableOnly.checked;
 
     const filtered = hotels.filter(h => {
+        // 1. 基礎篩選
         const priceMatch = h.price <= maxPrice;
         const sizeMatch = h.size >= minSize || (minSize === 0);
         const cancelMatch = !showCancelableOnly || h.cancelable;
         
-        const redLightMatch = !redLightFilter.checked || h.isRedLightDistrict;
-        const soundproofingMatch = !poorSoundproofingFilter.checked || h.isPoorSoundproofing;
-        const sofaBedMatch = !sofaBedFilter.checked || h.hasSofaBed;
-        const baggageMatch = !noBaggageFilter.checked || h.hasNoBaggageStorage;
-        const outletMatch = !fewOutletsFilter.checked || h.hasFewOutlets;
+        // 2. 優選篩選邏輯 (反轉邏輯)：
+        // 當勾選時，飯店必須滿足：屬性已定義 (!== undefined) 且 值為 false (表示沒有該負面特徵)
+        const safeAreaMatch = !safeAreaFilter.checked || (h.isRedLightDistrict !== undefined && h.isRedLightDistrict === false);
+        const goodSoundMatch = !goodSoundFilter.checked || (h.isPoorSoundproofing !== undefined && h.isPoorSoundproofing === false);
+        const realBedMatch = !realBedFilter.checked || (h.hasSofaBed !== undefined && h.hasSofaBed === false);
+        const baggageMatch = !hasBaggageFilter.checked || (h.hasNoBaggageStorage !== undefined && h.hasNoBaggageStorage === false);
+        const outletMatch = !plentyOutletsFilter.checked || (h.hasFewOutlets !== undefined && h.hasFewOutlets === false);
 
         return priceMatch && sizeMatch && cancelMatch && 
-               redLightMatch && soundproofingMatch && 
-               sofaBedMatch && baggageMatch && outletMatch;
+               safeAreaMatch && goodSoundMatch && 
+               realBedMatch && baggageMatch && outletMatch;
     });
 
     grid.innerHTML = '';
@@ -45,13 +48,15 @@ function renderHotels() {
             const card = document.createElement('div');
             card.className = 'hotel-card bg-white rounded-2xl overflow-hidden shadow-sm border border-slate-100 flex flex-col';
             
+            // 修正 Template Literals 的 URL 格式
             const mapUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(h.name + ' Singapore')}`;
 
-            // 樣式統一化函式：仿照「不可取消」的 text-slate-400 與佈局
+            // 樣式統一化函式：顯示負面狀態，樣式仿照「不可取消」
             const getFeatureRow = (val, label) => {
                 const isTrue = val === true;
+                // 如果值是 true，顯示該負面標籤；如果是 false，顯示「非...」；如果是 undefined，顯示「未提供」
                 const displayText = val === undefined ? `${label}: 未提供` : (isTrue ? label : `非${label}`);
-                // 如果是 true，則使用較深色，如果是 false/undefined 則使用跟「不可取消」一樣的 slate-400
+                // 只有確定有負面狀況 (true) 時顏色稍深，其餘 (false/undefined) 皆使用與「不可取消」相同的 slate-400
                 const colorClass = isTrue ? 'text-slate-600' : 'text-slate-400';
                 
                 return `
@@ -103,11 +108,20 @@ function renderHotels() {
 }
 
 // 監聽器
-[priceRange, sizeFilter, cancelableOnly, redLightFilter, poorSoundproofingFilter, sofaBedFilter, noBaggageFilter, fewOutletsFilter].forEach(el => {
-    if (el) el.addEventListener(el.id === 'priceRange' ? 'input' : 'change', (e) => {
-        if (el.id === 'priceRange') priceDisplay.textContent = `$${parseInt(e.target.value).toLocaleString()}`;
-        renderHotels();
-    });
+const allFilters = [
+    priceRange, sizeFilter, cancelableOnly, 
+    safeAreaFilter, goodSoundFilter, realBedFilter, 
+    hasBaggageFilter, plentyOutletsFilter
+];
+
+allFilters.forEach(el => {
+    if (el) {
+        el.addEventListener(el.id === 'priceRange' ? 'input' : 'change', (e) => {
+            if (el.id === 'priceRange') priceDisplay.textContent = `$${parseInt(e.target.value).toLocaleString()}`;
+            renderHotels();
+        });
+    }
 });
 
+// 初始渲染
 renderHotels();
