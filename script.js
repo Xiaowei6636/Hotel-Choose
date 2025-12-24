@@ -77,15 +77,17 @@ function renderHotels() {
                     </div>
                     
                     <div class="space-y-2 mt-4">
-                        <div class="flex items-center text-sm ${h.cancelable ? 'text-green-600' : 'text-slate-400'}">
-                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                            ${h.cancelable ? '可取消' : '不可取消'}
-                        </div>
 
                         <div class="flex items-center text-sm text-slate-600">
                             <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"></path></svg>
                             ${h.size > 0 ? h.size + ' 平方公尺' : '未提供空間資訊'}
                         </div>
+
+                        <div class="flex items-center text-sm ${h.cancelable ? 'text-green-600' : 'text-slate-400'}">
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                            ${h.cancelable ? '可取消' : '不可取消'}
+                        </div>
+
 
                         ${getFeatureRow(h.isRedLightDistrict, '靠近紅燈區')}
                         ${getFeatureRow(h.isPoorSoundproofing, '隔音差')}
