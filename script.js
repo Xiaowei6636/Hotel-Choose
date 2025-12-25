@@ -7,7 +7,6 @@ const priceDisplay = document.getElementById('priceDisplay');
 const sizeFilter = document.getElementById('sizeFilter');
 const cancelableOnly = document.getElementById('cancelableOnly');
 
-// 取得優選篩選控制項 (ID 已更新為正面表述)
 const safeAreaFilter = document.getElementById('safeAreaFilter');
 const goodSoundFilter = document.getElementById('goodSoundFilter');
 const realBedFilter = document.getElementById('realBedFilter');
@@ -20,12 +19,10 @@ function renderHotels() {
     const showCancelableOnly = cancelableOnly.checked;
 
     const filtered = hotels.filter(h => {
-        // 1. 基礎篩選
         const priceMatch = h.price <= maxPrice;
         const sizeMatch = h.size >= minSize || (minSize === 0);
         const cancelMatch = !showCancelableOnly || h.cancelable;
         
-        // 2. 優選篩選邏輯
         const safeAreaMatch = !safeAreaFilter.checked || (h.isRedLightDistrict === false);
         const goodSoundMatch = !goodSoundFilter.checked || (h.isPoorSoundproofing === false);
         const realBedMatch = !realBedFilter.checked || (h.hasSofaBed === false);
@@ -47,11 +44,13 @@ function renderHotels() {
             const card = document.createElement('div');
             card.className = 'hotel-card bg-white rounded-2xl overflow-hidden shadow-sm border border-slate-100 flex flex-col';
             
-            // 修正 Template Literals 語法：加入 ${}
-            const mapUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(h.name + ' Singapore')}`;
+            // 修正 Map URL 的 Template Literal
+            const mapUrl = `https://www.google.com/maps/search/${encodeURIComponent(h.name + ' Singapore')}`;
 
-            // 定義要顯示的特徵資料清單
+            // 1. 定義要顯示的特徵資料 (將 cancelable 整合進來)
+            // 將「不可取消」視為 true (負面)，這樣才能統一排序邏輯
             const features = [
+                { val: h.cancelable === false ? true : (h.cancelable === true ? false : undefined), label: '不可取消' },
                 { val: h.isRedLightDistrict, label: '靠近紅燈區' },
                 { val: h.isPoorSoundproofing, label: '隔音差' },
                 { val: h.hasSofaBed, label: '沙發床' },
@@ -59,29 +58,30 @@ function renderHotels() {
                 { val: h.hasFewOutlets, label: '插座少' }
             ];
 
-            // 排序邏輯：負面資訊 (true) 排在最前面，其餘 (false/undefined) 在後
+            // 2. 排序邏輯：負面 (true) > 正面 (false) > 未提供 (undefined)
             features.sort((a, b) => {
-                if (a.val === b.val) return 0;
-                if (a.val === true) return -1; // 負面特徵優先往上排
-                if (b.val === true) return 1;
-                return 0;
+                const getPriority = (v) => {
+                    if (v === true) return 1;    // 負面資訊排第一
+                    if (v === false) return 2;   // 正面資訊排第二
+                    return 3;                    // undefined 排最後
+                };
+                return getPriority(a.val) - getPriority(b.val);
             });
 
-            // 產生特徵 HTML 的輔助函式
+            // 3. 產生特徵 HTML 的輔助函式
             const getFeatureHTML = (f) => {
-                let colorClass = 'text-slate-400'; // 預設：未提供 (undefined)
+                let colorClass = 'text-slate-400'; 
                 let displayText = `${f.label}: 未提供`;
-                let iconPath = 'M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z'; // 預設資訊圖示
+                let iconPath = 'M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z'; 
 
                 if (f.val === true) {
-                    colorClass = 'text-amber-600 font-bold'; // 負面：琥珀色+粗體
+                    colorClass = 'text-amber-600 font-bold'; 
                     displayText = f.label;
-                    // 使用警告圖示
                     iconPath = 'M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z';
                 } else if (f.val === false) {
-                    colorClass = 'text-slate-800'; // 正面：黑色 (同房間大小)
-                    displayText = `非${f.label}`;
-                    // 使用檢查圖示
+                    colorClass = 'text-slate-800';
+                    // 針對「不可取消」標籤做反轉優化顯示
+                    displayText = f.label === '不可取消' ? '可免費取消' : `非${f.label}`;
                     iconPath = 'M5 13l4 4L19 7';
                 }
 
@@ -110,16 +110,11 @@ function renderHotels() {
                             ${h.size > 0 ? h.size + ' 平方公尺' : '未提供空間資訊'}
                         </div>
 
-                        <div class="flex items-center text-sm ${h.cancelable ? 'text-green-600' : 'text-slate-400'}">
-                            <svg class="w-4 h-4 mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                            </svg>
-                            ${h.cancelable ? '可取消' : '不可取消'}
-                        </div>
-
                         <hr class="border-slate-100 my-2">
 
-                        ${features.map(f => getFeatureHTML(f)).join('')}
+                        <div class="space-y-2">
+                            ${features.map(f => getFeatureHTML(f)).join('')}
+                        </div>
                     </div>
                 </div>
                 <div class="px-5 py-4 bg-slate-50 border-t border-slate-100 flex justify-between items-start gap-3">
