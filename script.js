@@ -96,12 +96,12 @@ function renderHotels() {
                         ${getFeatureRow(h.hasFewOutlets, '插座少')}
                     </div>
                 </div>
-                <div class="px-5 py-4 bg-slate-50 border-t border-slate-100 flex justify-between items-center gap-4">
-                    <span class="text-xs text-slate-500 italic truncate flex-grow" title="${h.note || ''}">
+                <div class="px-5 py-4 bg-slate-50 border-t border-slate-100 flex justify-between items-start gap-3">
+                    <div class="text-xs text-slate-500 italic leading-relaxed">
                         ${h.note || ''}
-                    </span>
+                    </div>
                     
-                    <a href="${mapUrl}" target="_blank" class="text-blue-600 font-semibold text-sm hover:underline flex items-center whitespace-nowrap flex-shrink-0">
+                    <a href="${mapUrl}" target="_blank" class="text-blue-600 font-semibold text-sm hover:underline flex items-center whitespace-nowrap flex-shrink-0 pt-0.5">
                         查看地圖
                         <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
