@@ -1,14 +1,14 @@
 export const hotels = [
-    { name: "V Hotel Bencoolen", price: 6377, cancelable: false, size: 16, note: "", isRedLightDistrict: false },
-    { name: "Hotel Mi Bencoolen", price: 6507, cancelable: true, size: 17, note: "", isRedLightDistrict: false },
-    { name: "Hotel Mi Rochor", price: 6627, cancelable: false, size: 17, note: "", isRedLightDistrict: false },
-    { name: "Furama RiverFront", price: 5360, cancelable: false, size: 30, note: "", isRedLightDistrict: false },
-    { name: "Owen House by Habyt", price: 8271, cancelable: false, size: 32, note: "", isRedLightDistrict: false },
-    { name: "V Hotel Lavender", price: 6883, cancelable: false, size: 16, note: "", isRedLightDistrict: false },
-    { name: "Hotel Classic by Venue", price: 4300, cancelable: true, size: 18, note: "部分無窗", lat: 1.3159092188196442, lon: 103.8977450655825, isRedLightDistrict: true },
-    { name: "Strand Hotel Singapore", price: 6500, cancelable: true, size: 18, hasFewOutlets: true, note: "三人房(18/2sig+1ex)/WiFI/前2天14點前方可取消", isRedLightDistrict: false },
-    { name: "Strand Hotel Singapore", price: 6800, cancelable: true, size: 20, hasFewOutlets: false, note: "三人房(20/2sig+1ex)/WiFI/前2天14點前方可取消", isRedLightDistrict: false },
-    { name: "Strand Hotel Singapore", price: 8850, cancelable: true, size: 34, hasFewOutlets: false, note: "家庭房(2張雙人床/WiFi/前2天14點前方可取消", isRedLightDistrict: false }
+    { name: "V Hotel Bencoolen", price: 6377, cancelable: false, size: 16, note: "免費WiFi/游泳池", isRedLightDistrict: false },
+    { name: "Hotel Mi Bencoolen", price: 6507, cancelable: true, size: 17, note: "免費WiFi", isRedLightDistrict: false },
+    { name: "Hotel Mi Rochor", price: 6627, cancelable: false, size: 17, note: "WiFi/游泳池", isRedLightDistrict: false },
+    { name: "Furama RiverFront", price: 5360, cancelable: false, size: 30, note: "免費WiFi/室外游泳池/洗衣機/健身房/酒吧/水療服務", isRedLightDistrict: false },
+    { name: "Owen House by Habyt", price: 8271, cancelable: false, size: 32, note: "免費WiFi/機場接駁/酒吧/部分有廚房", isRedLightDistrict: false },
+    { name: "V Hotel Lavender", price: 6883, cancelable: false, size: 16, note: "免費WiFi/室外游泳池/酒吧", isRedLightDistrict: false },
+    { name: "Hotel Classic by Venue", price: 4300, cancelable: true, size: 18, note: "部分無窗/免費WiFi", lat: 1.3159092188196442, lon: 103.8977450655825, isRedLightDistrict: true },
+    { name: "Strand Hotel Singapore", price: 6500, cancelable: true, size: 18, hasFewOutlets: true, note: "三人房(18/2sig+1ex)/WiFI/洗衣機/前2天14點前方可取消", isRedLightDistrict: false },
+    { name: "Strand Hotel Singapore", price: 6800, cancelable: true, size: 20, hasFewOutlets: false, note: "三人房(20/2sig+1ex)/WiFI/洗衣機/前2天14點前方可取消", isRedLightDistrict: false },
+    { name: "Strand Hotel Singapore", price: 8850, cancelable: true, size: 34, hasFewOutlets: false, note: "家庭房(2張雙人床/WiFi/洗衣機/前2天14點前方可取消", isRedLightDistrict: false }
 ];
 
 
