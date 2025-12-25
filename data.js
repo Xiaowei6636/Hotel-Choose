@@ -5,7 +5,7 @@ export const hotels = [
     { name: "Furama RiverFront", price: 5360, cancelable: false, size: 30, note: "" },
     { name: "Owen House by Habyt", price: 8271, cancelable: false, size: 32, note: "" },
     { name: "V Hotel Lavender", price: 6883, cancelable: false, size: 16, note: "" },
-    { name: "Hotel Classic by Venue", price: 4300, cancelable: true, size: 18, note: "部分無窗" },
+    { name: "Hotel Classic by Venue", price: 4300, cancelable: true, size: 18, note: "部分無窗", lat: 1.3159092188196442, lon: 103.8977450655825, isRedLightDistrict: true },
     { name: "Strand Hotel Singapore", price: 6500, cancelable: true, size: 18, hasFewOutlets: true, note: "三人房(18/2sig+1ex)/WiFI/前2天14點前方可取消" },
     { name: "Strand Hotel Singapore", price: 6800, cancelable: true, size: 20, hasFewOutlets: false, note: "三人房(20/2sig+1ex)/WiFI/前2天14點前方可取消" },
     { name: "Strand Hotel Singapore", price: 8850, cancelable: true, size: 34, hasFewOutlets: false, note: "家庭房(2張雙人床/WiFi/前2天14點前方可取消" }
@@ -21,7 +21,8 @@ export const hotels = [
  * - hasSofaBed: true           (有沙發床)
  * - hasNoBaggageStorage: true  (無行李寄放)
  * - hasFewOutlets: true        (插座少)
+ * - lat: 1.2345, lon: 103.123  (手動指定座標，若未填寫則自動查詢)
  * * 範例：
- * { name: "範例飯店", price: 5000, ..., isRedLightDistrict: true }
+ * { name: "範例飯店", price: 5000, ..., lat: 1.30, lon: 103.85 }
  * * 若未填寫，網頁卡片將統一顯示「未提供資訊」。
  */

@@ -58,6 +58,14 @@ async function getCoordinates(name) {
 
 async function geocodeAllHotels() {
     for (const h of hotels) {
+        // 優先權：1. 手動座標 > 2. 快取座標 > 3. 即時查詢
+        if (h.lat && h.lon) {
+            coordsCache[h.name] = { lat: h.lat, lon: h.lon };
+            updateMapMarkers();
+            if (!debugPanel.classList.contains('hidden')) renderDebugList();
+            continue;
+        }
+
         if (!coordsCache[h.name]) {
             console.log(`正在獲取 ${h.name} 的座標...`);
             await getCoordinates(h.name);
@@ -76,7 +84,8 @@ function updateMapMarkers() {
     // 將飯店按座標分組
     const groups = {};
     currentFilteredHotels.forEach(h => {
-        const coords = coordsCache[h.name];
+        // 優先使用手動座標，其次才是快取
+        const coords = (h.lat && h.lon) ? { lat: h.lat, lon: h.lon } : coordsCache[h.name];
         if (coords) {
             const key = `${coords.lat.toFixed(6)},${coords.lon.toFixed(6)}`; // 使用小數點後六位作為 key 以處理微小差異
             if (!groups[key]) {
@@ -433,15 +442,20 @@ function renderDebugList() {
     debugList.innerHTML = '';
 
     hotels.forEach(h => {
-        const coords = coordsCache[h.name];
+        const isManual = h.lat && h.lon;
+        const coords = isManual ? { lat: h.lat, lon: h.lon } : coordsCache[h.name];
+
         const statusItem = document.createElement('div');
         statusItem.className = 'p-4 rounded-xl border flex items-center justify-between ' +
-            (coords ? 'bg-emerald-50 border-emerald-100' : 'bg-rose-50 border-rose-100');
+            (coords ? (isManual ? 'bg-blue-50 border-blue-100' : 'bg-emerald-50 border-emerald-100') : 'bg-rose-50 border-rose-100');
 
         statusItem.innerHTML = `
             <div>
-                <div class="font-bold text-slate-800">${h.name}</div>
-                <div class="text-xs ${coords ? 'text-emerald-600' : 'text-rose-600'} mt-1">
+                <div class="font-bold text-slate-800">
+                    ${h.name}
+                    ${isManual ? '<span class="ml-2 text-[10px] bg-blue-600 text-white px-1.5 py-0.5 rounded">手動提供</span>' : ''}
+                </div>
+                <div class="text-xs ${coords ? (isManual ? 'text-blue-600' : 'text-emerald-600') : 'text-rose-600'} mt-1">
                     ${coords ? `座標: ${coords.lat}, ${coords.lon}` : '⚠️ 查無座標'}
                 </div>
             </div>
