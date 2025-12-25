@@ -5,9 +5,10 @@ export const hotels = [
     { name: "Furama RiverFront", price: 5360, cancelable: false, size: 30, note: "" },
     { name: "Owen House by Habyt", price: 8271, cancelable: false, size: 32, note: "" },
     { name: "V Hotel Lavender", price: 6883, cancelable: false, size: 16, note: "" },
-    { name: "Hotel Classic by Venue", price: 4300, cancelable: true, size: 18, note: "部分無窗" }
+    { name: "Hotel Classic by Venue", price: 4300, cancelable: true, size: 18, note: "部分無窗" }, // 這裡補上了逗號，拿掉了分號
     { name: "Strand Hotel Singapore", price: 6500, cancelable: true, size: 34, hasSofaBed: false, hasFewOutlets: false, note: "免費無限網路/免費停車場/入住前2天並在14點前方可免費取消" }
 ];
+
 
 /**
  * --- 填寫說明 ---
