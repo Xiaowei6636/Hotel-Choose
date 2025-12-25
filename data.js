@@ -1,14 +1,14 @@
 export const hotels = [
-    { name: "V Hotel Bencoolen", price: 6377, cancelable: false, size: 16, note: "免費WiFi/游泳池", isRedLightDistrict: false },
-    { name: "Hotel Mi Bencoolen", price: 6507, cancelable: true, size: 17, note: "免費WiFi", isRedLightDistrict: false },
-    { name: "Hotel Mi Rochor", price: 6627, cancelable: false, size: 17, note: "WiFi/游泳池", isRedLightDistrict: false },
-    { name: "Furama RiverFront", price: 5360, cancelable: false, size: 30, note: "免費WiFi/室外游泳池/洗衣機/健身房/酒吧/水療服務", isRedLightDistrict: false },
-    { name: "Owen House by Habyt", price: 8271, cancelable: false, size: 32, note: "免費WiFi/機場接駁/酒吧/部分有廚房", isRedLightDistrict: false },
-    { name: "V Hotel Lavender", price: 6883, cancelable: false, size: 16, note: "免費WiFi/室外游泳池/酒吧", isRedLightDistrict: false },
-    { name: "Hotel Classic by Venue", price: 4300, cancelable: true, size: 18, note: "部分無窗/免費WiFi", lat: 1.3159092188196442, lon: 103.8977450655825, isRedLightDistrict: true },
-    { name: "Strand Hotel Singapore", price: 6500, cancelable: true, size: 18, hasFewOutlets: true, note: "三人房(18/2sig+1ex)/WiFI/洗衣機/前2天14點前方可取消", isRedLightDistrict: false },
-    { name: "Strand Hotel Singapore", price: 6800, cancelable: true, size: 20, hasFewOutlets: false, note: "三人房(20/2sig+1ex)/WiFI/洗衣機/前2天14點前方可取消", isRedLightDistrict: false },
-    { name: "Strand Hotel Singapore", price: 8850, cancelable: true, size: 34, hasFewOutlets: false, note: "家庭房(2張雙人床/WiFi/洗衣機/前2天14點前方可取消", isRedLightDistrict: false }
+    { name: "V Hotel Bencoolen", price: 6377, cancelable: false, size: 16, note: "", hasWiFi: true, hasPool: true, isRedLightDistrict: false },
+    { name: "Hotel Mi Bencoolen", price: 6507, cancelable: true, size: 17, note: "", hasWiFi: true, isRedLightDistrict: false },
+    { name: "Hotel Mi Rochor", price: 6627, cancelable: false, size: 17, note: "", hasWiFi: true, hasPool: true, isRedLightDistrict: false },
+    { name: "Furama RiverFront", price: 5360, cancelable: false, size: 30, note: "健身房/酒吧/水療服務", hasWiFi: true, hasPool: true, hasWashingMachine: true, isRedLightDistrict: false },
+    { name: "Owen House by Habyt", price: 8271, cancelable: false, size: 32, note: "機場接駁/酒吧/部分有廚房", hasWiFi: true, isRedLightDistrict: false },
+    { name: "V Hotel Lavender", price: 6883, cancelable: false, size: 16, note: "酒吧", hasWiFi: true, hasPool: true, isRedLightDistrict: false },
+    { name: "Hotel Classic by Venue", price: 4300, cancelable: true, size: 18, note: "部分無窗", hasWiFi: true, lat: 1.3159092188196442, lon: 103.8977450655825, isRedLightDistrict: true },
+    { name: "Strand Hotel Singapore", price: 6500, cancelable: true, size: 18, hasFewOutlets: true, note: "三人房(18/2sig+1ex)/前2天14點前方可取消", hasWiFi: true, hasWashingMachine: true, isRedLightDistrict: false },
+    { name: "Strand Hotel Singapore", price: 6800, cancelable: true, size: 20, hasFewOutlets: false, note: "三人房(20/2sig+1ex)/前2天14點前方可取消", hasWiFi: true, hasWashingMachine: true, isRedLightDistrict: false },
+    { name: "Strand Hotel Singapore", price: 8850, cancelable: true, size: 34, hasFewOutlets: false, note: "家庭房(2張雙人床/前2天14點前方可取消", hasWiFi: true, hasWashingMachine: true, isRedLightDistrict: false }
 ];
 
 
@@ -21,6 +21,9 @@ export const hotels = [
  * - hasSofaBed: true           (有沙發床)
  * - hasNoBaggageStorage: true  (無行李寄放)
  * - hasFewOutlets: true        (插座少)
+ * - hasWiFi: true              (包含WiFi)
+ * - hasPool: true              (包含游泳池)
+ * - hasWashingMachine: true    (包含洗衣機)
  * - lat: 1.2345, lon: 103.123  (手動指定座標，若未填寫則自動查詢)
  * * 範例：
  * { name: "範例飯店", price: 5000, ..., lat: 1.30, lon: 103.85 }

@@ -12,6 +12,9 @@ const goodSoundFilter = document.getElementById('goodSoundFilter');
 const realBedFilter = document.getElementById('realBedFilter');
 const hasBaggageFilter = document.getElementById('hasBaggageFilter');
 const plentyOutletsFilter = document.getElementById('plentyOutletsFilter');
+const wifiFilter = document.getElementById('wifiFilter');
+const poolFilter = document.getElementById('poolFilter');
+const washerFilter = document.getElementById('washerFilter');
 
 // --- 地理編碼與緩存相關 ---
 const CACHE_KEY = 'hotel_coords_cache_v1';
@@ -180,10 +183,14 @@ function renderHotels() {
         const realBedMatch = !realBedFilter.checked || (h.hasSofaBed === false);
         const baggageMatch = !hasBaggageFilter.checked || (h.hasNoBaggageStorage === false);
         const outletMatch = !plentyOutletsFilter.checked || (h.hasFewOutlets === false);
+        const wifiMatch = !wifiFilter.checked || h.hasWiFi;
+        const poolMatch = !poolFilter.checked || h.hasPool;
+        const washerMatch = !washerFilter.checked || h.hasWashingMachine;
 
         return priceMatch && sizeMatch && cancelMatch &&
             safeAreaMatch && goodSoundMatch &&
-            realBedMatch && baggageMatch && outletMatch;
+            realBedMatch && baggageMatch && outletMatch &&
+            wifiMatch && poolMatch && washerMatch;
     });
 
     grid.innerHTML = '';
@@ -205,6 +212,9 @@ function renderHotels() {
                 { val: h.hasSofaBed, label: '沙發床' },
                 { val: h.hasNoBaggageStorage, label: '無行李寄放' },
                 { val: h.hasFewOutlets, label: '插座少' },
+                { val: h.hasWiFi, label: 'WiFi', isPositive: true },
+                { val: h.hasPool, label: '游泳池', isPositive: true },
+                { val: h.hasWashingMachine, label: '洗衣機', isPositive: true },
             ];
 
             features.sort((a, b) => {
@@ -218,21 +228,36 @@ function renderHotels() {
 
             const getFeatureHTML = (f) => {
                 let colorClass = 'text-slate-400';
-                let displayText = `${f.label}: 未提供`;
+                let displayText = `${f.label}: 無資訊`;
                 let iconPath = 'M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z';
 
                 if (f.val === true) {
-                    colorClass = 'text-amber-600 font-bold';
-                    displayText = f.label;
-                    iconPath = 'M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z';
-                } else if (f.val === false) {
-                    colorClass = 'text-slate-800';
-                    if (f.label === '不可取消') {
-                        displayText = '可免費取消';
+                    if (f.isPositive) {
+                        colorClass = 'text-slate-800';
+                        displayText = f.label;
+                        iconPath = 'M5 13l4 4L19 7';
                     } else {
-                        displayText = `非${f.label}`;
+                        colorClass = 'text-amber-600 font-bold';
+                        displayText = f.label;
+                        iconPath = 'M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z';
                     }
-                    iconPath = 'M5 13l4 4L19 7';
+                } else if (f.val === false) {
+                    if (f.isPositive) {
+                        // 如果明確寫了 false，顯示「無」
+                        colorClass = 'text-slate-400';
+                        displayText = `${f.label}: 無`;
+                        iconPath = 'M6 18L18 6M6 6l12 12';
+                    } else {
+                        colorClass = 'text-slate-800';
+                        if (f.label === '不可取消') {
+                            displayText = '可免費取消';
+                        } else {
+                            displayText = `非${f.label}`;
+                        }
+                        iconPath = 'M5 13l4 4L19 7';
+                    }
+                } else {
+                    // f.val 為 undefined，保持預設的「未提供」
                 }
 
                 return `
@@ -292,7 +317,8 @@ function renderHotels() {
 const allFilters = [
     priceRange, sizeFilter, cancelableOnly,
     safeAreaFilter, goodSoundFilter, realBedFilter,
-    hasBaggageFilter, plentyOutletsFilter
+    hasBaggageFilter, plentyOutletsFilter,
+    wifiFilter, poolFilter, washerFilter
 ];
 
 allFilters.forEach(el => {
