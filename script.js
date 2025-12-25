@@ -12,6 +12,7 @@ const goodSoundFilter = document.getElementById('goodSoundFilter');
 const realBedFilter = document.getElementById('realBedFilter');
 const hasBaggageFilter = document.getElementById('hasBaggageFilter');
 const plentyOutletsFilter = document.getElementById('plentyOutletsFilter');
+const hasParkingFilter = document.getElementById('hasParkingFilter');
 
 function renderHotels() {
     const maxPrice = parseInt(priceRange.value);
@@ -22,20 +23,21 @@ function renderHotels() {
         const priceMatch = h.price <= maxPrice;
         const sizeMatch = h.size >= minSize || (minSize === 0);
         const cancelMatch = !showCancelableOnly || h.cancelable;
-        
+
         const safeAreaMatch = !safeAreaFilter.checked || (h.isRedLightDistrict === false);
         const goodSoundMatch = !goodSoundFilter.checked || (h.isPoorSoundproofing === false);
         const realBedMatch = !realBedFilter.checked || (h.hasSofaBed === false);
         const baggageMatch = !hasBaggageFilter.checked || (h.hasNoBaggageStorage === false);
         const outletMatch = !plentyOutletsFilter.checked || (h.hasFewOutlets === false);
+        const parkingMatch = !hasParkingFilter.checked || (h.hasNoParking === false);
 
-        return priceMatch && sizeMatch && cancelMatch && 
-               safeAreaMatch && goodSoundMatch && 
-               realBedMatch && baggageMatch && outletMatch;
+        return priceMatch && sizeMatch && cancelMatch &&
+            safeAreaMatch && goodSoundMatch &&
+            realBedMatch && baggageMatch && outletMatch && parkingMatch;
     });
 
     grid.innerHTML = '';
-    
+
     if (filtered.length === 0) {
         noResults.classList.remove('hidden');
     } else {
@@ -43,7 +45,7 @@ function renderHotels() {
         filtered.forEach(h => {
             const card = document.createElement('div');
             card.className = 'hotel-card bg-white rounded-2xl overflow-hidden shadow-sm border border-slate-100 flex flex-col';
-            
+
             // 修正 Map URL 的 Template Literal
             const mapUrl = `https://www.google.com/maps/search/${encodeURIComponent(h.name + ' Singapore')}`;
 
@@ -55,7 +57,8 @@ function renderHotels() {
                 { val: h.isPoorSoundproofing, label: '隔音差' },
                 { val: h.hasSofaBed, label: '沙發床' },
                 { val: h.hasNoBaggageStorage, label: '無行李寄放' },
-                { val: h.hasFewOutlets, label: '插座少' }
+                { val: h.hasFewOutlets, label: '插座少' },
+                { val: h.hasNoParking, label: '免費停車' }
             ];
 
             // 2. 排序邏輯：負面 (true) > 正面 (false) > 未提供 (undefined)
@@ -70,18 +73,24 @@ function renderHotels() {
 
             // 3. 產生特徵 HTML 的輔助函式
             const getFeatureHTML = (f) => {
-                let colorClass = 'text-slate-400'; 
+                let colorClass = 'text-slate-400';
                 let displayText = `${f.label}: 未提供`;
-                let iconPath = 'M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z'; 
+                let iconPath = 'M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z';
 
                 if (f.val === true) {
-                    colorClass = 'text-amber-600 font-bold'; 
+                    colorClass = 'text-amber-600 font-bold';
                     displayText = f.label;
                     iconPath = 'M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z';
                 } else if (f.val === false) {
                     colorClass = 'text-slate-800';
-                    // 針對「不可取消」標籤做反轉優化顯示
-                    displayText = f.label === '不可取消' ? '可免費取消' : `非${f.label}`;
+                    // 針對標籤做反轉優化顯示
+                    if (f.label === '不可取消') {
+                        displayText = '可免費取消';
+                    } else if (f.label === '免費停車') {
+                        displayText = '有免費停車';
+                    } else {
+                        displayText = `非${f.label}`;
+                    }
                     iconPath = 'M5 13l4 4L19 7';
                 }
 
@@ -137,9 +146,9 @@ function renderHotels() {
 
 // 監聽器
 const allFilters = [
-    priceRange, sizeFilter, cancelableOnly, 
-    safeAreaFilter, goodSoundFilter, realBedFilter, 
-    hasBaggageFilter, plentyOutletsFilter
+    priceRange, sizeFilter, cancelableOnly,
+    safeAreaFilter, goodSoundFilter, realBedFilter,
+    hasBaggageFilter, plentyOutletsFilter, hasParkingFilter
 ];
 
 allFilters.forEach(el => {
