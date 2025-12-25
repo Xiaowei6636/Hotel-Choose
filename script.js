@@ -23,6 +23,12 @@ function saveCache() {
     localStorage.setItem(CACHE_KEY, JSON.stringify(coordsCache));
 }
 
+function clearCache() {
+    localStorage.removeItem(CACHE_KEY);
+    coordsCache = {};
+    location.reload();
+}
+
 async function delay(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
@@ -56,6 +62,7 @@ async function geocodeAllHotels() {
             console.log(`正在獲取 ${h.name} 的座標...`);
             await getCoordinates(h.name);
             updateMapMarkers(); // 每成功獲取一個就更新一次地圖（若地圖已初始化）
+            if (!debugPanel.classList.contains('hidden')) renderDebugList(); // 若偵錯面板開啟則更新內容
             await delay(1200); // 稍微超過 1 秒以符合 Nominatim 政策
         }
     }
@@ -391,6 +398,74 @@ function initMap() {
         })
         .catch(err => console.error('無法載入捷運路線數據:', err));
 }
+
+// --- 偵錯相關功能 ---
+const debugPanel = document.getElementById('debugPanel');
+const debugList = document.getElementById('debugList');
+const closeDebugBtn = document.getElementById('closeDebugBtn');
+const clearCacheBtn = document.getElementById('clearCacheBtn');
+const pageTitle = document.querySelector('header h1');
+
+let clickCount = 0;
+let clickTimer = null;
+
+if (pageTitle) {
+    pageTitle.addEventListener('click', () => {
+        clickCount++;
+        clearTimeout(clickTimer);
+        clickTimer = setTimeout(() => {
+            clickCount = 0;
+        }, 500);
+
+        if (clickCount === 3) {
+            showDebugPanel();
+            clickCount = 0;
+        }
+    });
+}
+
+function showDebugPanel() {
+    debugPanel.classList.remove('hidden');
+    renderDebugList();
+}
+
+function renderDebugList() {
+    debugList.innerHTML = '';
+
+    hotels.forEach(h => {
+        const coords = coordsCache[h.name];
+        const statusItem = document.createElement('div');
+        statusItem.className = 'p-4 rounded-xl border flex items-center justify-between ' +
+            (coords ? 'bg-emerald-50 border-emerald-100' : 'bg-rose-50 border-rose-100');
+
+        statusItem.innerHTML = `
+            <div>
+                <div class="font-bold text-slate-800">${h.name}</div>
+                <div class="text-xs ${coords ? 'text-emerald-600' : 'text-rose-600'} mt-1">
+                    ${coords ? `座標: ${coords.lat}, ${coords.lon}` : '⚠️ 查無座標'}
+                </div>
+            </div>
+            ${!coords ? `
+                <a href="https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(h.name + ' Singapore')}&format=json" 
+                   target="_blank" 
+                   class="text-xs bg-rose-200 text-rose-800 px-3 py-1.5 rounded-lg hover:bg-rose-300 font-bold">
+                   手動測試 Nominatim
+                </a>
+            ` : ''}
+        `;
+        debugList.appendChild(statusItem);
+    });
+}
+
+closeDebugBtn.addEventListener('click', () => {
+    debugPanel.classList.add('hidden');
+});
+
+clearCacheBtn.addEventListener('click', () => {
+    if (confirm('確定要清除所有快取的座標資訊並重新查詢嗎？')) {
+        clearCache();
+    }
+});
 
 // 初始啟動
 renderHotels();
