@@ -21,7 +21,6 @@ export const hotels = [
  * - hasSofaBed: true           (有沙發床)
  * - hasNoBaggageStorage: true  (無行李寄放)
  * - hasFewOutlets: true        (插座少)
- * - hasNoParking: true         (無停車場)
  * * 範例：
  * { name: "範例飯店", price: 5000, ..., isRedLightDistrict: true }
  * * 若未填寫，網頁卡片將統一顯示「未提供資訊」。

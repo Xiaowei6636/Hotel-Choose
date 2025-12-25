@@ -12,7 +12,6 @@ const goodSoundFilter = document.getElementById('goodSoundFilter');
 const realBedFilter = document.getElementById('realBedFilter');
 const hasBaggageFilter = document.getElementById('hasBaggageFilter');
 const plentyOutletsFilter = document.getElementById('plentyOutletsFilter');
-const hasParkingFilter = document.getElementById('hasParkingFilter');
 
 // --- 地理編碼與緩存相關 ---
 const CACHE_KEY = 'hotel_coords_cache_v1';
@@ -117,11 +116,10 @@ function renderHotels() {
         const realBedMatch = !realBedFilter.checked || (h.hasSofaBed === false);
         const baggageMatch = !hasBaggageFilter.checked || (h.hasNoBaggageStorage === false);
         const outletMatch = !plentyOutletsFilter.checked || (h.hasFewOutlets === false);
-        const parkingMatch = !hasParkingFilter.checked || (h.hasNoParking === false);
 
         return priceMatch && sizeMatch && cancelMatch &&
             safeAreaMatch && goodSoundMatch &&
-            realBedMatch && baggageMatch && outletMatch && parkingMatch;
+            realBedMatch && baggageMatch && outletMatch;
     });
 
     grid.innerHTML = '';
@@ -143,7 +141,6 @@ function renderHotels() {
                 { val: h.hasSofaBed, label: '沙發床' },
                 { val: h.hasNoBaggageStorage, label: '無行李寄放' },
                 { val: h.hasFewOutlets, label: '插座少' },
-                { val: h.hasNoParking, label: '停車場' }
             ];
 
             features.sort((a, b) => {
@@ -168,8 +165,6 @@ function renderHotels() {
                     colorClass = 'text-slate-800';
                     if (f.label === '不可取消') {
                         displayText = '可免費取消';
-                    } else if (f.label === '停車場') {
-                        displayText = '有停車場';
                     } else {
                         displayText = `非${f.label}`;
                     }
@@ -233,7 +228,7 @@ function renderHotels() {
 const allFilters = [
     priceRange, sizeFilter, cancelableOnly,
     safeAreaFilter, goodSoundFilter, realBedFilter,
-    hasBaggageFilter, plentyOutletsFilter, hasParkingFilter
+    hasBaggageFilter, plentyOutletsFilter
 ];
 
 allFilters.forEach(el => {
