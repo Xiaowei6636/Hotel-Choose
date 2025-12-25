@@ -13,3 +13,15 @@ body {
     transform: translateY(-4px);
     box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
 }
+
+#viewToggleBtn {
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+}
+
+#viewToggleBtn:active {
+    transform: scale(0.95);
+}
+
+#mapContainer {
+    background-color: #f1f5f9;
+}
