@@ -58,7 +58,7 @@ function renderHotels() {
                 { val: h.hasSofaBed, label: '沙發床' },
                 { val: h.hasNoBaggageStorage, label: '無行李寄放' },
                 { val: h.hasFewOutlets, label: '插座少' },
-                { val: h.hasNoParking, label: '免費停車' }
+                { val: h.hasNoParking, label: '停車場' }
             ];
 
             // 2. 排序邏輯：負面 (true) > 正面 (false) > 未提供 (undefined)
@@ -86,8 +86,8 @@ function renderHotels() {
                     // 針對標籤做反轉優化顯示
                     if (f.label === '不可取消') {
                         displayText = '可免費取消';
-                    } else if (f.label === '免費停車') {
-                        displayText = '有免費停車';
+                    } else if (f.label === '停車場') {
+                        displayText = '有停車場';
                     } else {
                         displayText = `非${f.label}`;
                     }
