@@ -66,32 +66,80 @@ function updateMapMarkers() {
 
     markerLayer.clearLayers();
 
+    // 將飯店按座標分組
+    const groups = {};
     currentFilteredHotels.forEach(h => {
         const coords = coordsCache[h.name];
         if (coords) {
-            const marker = L.marker([coords.lat, coords.lon]);
+            const key = `${coords.lat.toFixed(6)},${coords.lon.toFixed(6)}`; // 使用小數點後六位作為 key 以處理微小差異
+            if (!groups[key]) {
+                groups[key] = {
+                    coords: coords,
+                    hotels: []
+                };
+            }
+            groups[key].hotels.push(h);
+        }
+    });
 
-            // 建立 Popup 內容
-            const popupContent = `
-                <div class="p-2 min-w-[150px]">
-                    <h3 class="font-bold text-lg border-b mb-2 pb-1 text-slate-800">${h.name}</h3>
-                    <div class="text-sm space-y-1 mb-4">
-                        <div class="flex justify-between"><span>價格:</span><span class="font-bold text-blue-600">$${h.price.toLocaleString()}</span></div>
-                        <div class="flex justify-between"><span>空間:</span><span class="font-medium">${h.size} m²</span></div>
-                        <div class="mt-2 text-xs text-slate-500 italic leading-snug">${h.note || ''}</div>
+    // 為每個座標組創建標記
+    Object.values(groups).forEach(group => {
+        const marker = L.marker([group.coords.lat, group.coords.lon]);
+
+        let popupContent = `<div class="p-1 min-w-[200px] max-w-[280px] max-h-[400px] overflow-y-auto">`;
+
+        if (group.hotels.length > 1) {
+            popupContent += `
+                <div class="sticky top-0 bg-white border-b mb-2 pb-2 z-10">
+                    <h3 class="font-bold text-sm text-blue-600 flex items-center">
+                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                        </svg>
+                        此處有 ${group.hotels.length} 間符合條件的飯店
+                    </h3>
+                </div>
+            `;
+        }
+
+        group.hotels.forEach((h, index) => {
+            const isMultiple = group.hotels.length > 1;
+            popupContent += `
+                <div class="${index > 0 ? 'mt-3 pt-3 border-t border-slate-100' : ''}">
+                    <div class="flex justify-between items-start gap-2">
+                        <h4 class="${isMultiple ? 'text-sm' : 'text-lg'} font-bold text-slate-800 leading-tight">${h.name}</h4>
+                        <span class="bg-blue-50 text-blue-700 ${isMultiple ? 'text-[10px]' : 'text-xs'} px-1.5 py-0.5 rounded font-bold whitespace-nowrap">
+                            $${h.price.toLocaleString()}
+                        </span>
                     </div>
+                    
+                    <div class="${isMultiple ? 'text-[11px]' : 'text-sm'} text-slate-600 mt-1 space-y-1">
+                        <div class="flex items-center">
+                            <svg class="w-3 h-3 mr-1 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5" />
+                            </svg>
+                            空間: ${h.size} m²
+                        </div>
+                        ${h.note ? `
+                            <div class="text-slate-500 italic leading-snug bg-slate-50 p-1.5 rounded mt-1 border border-slate-100">
+                                ${h.note}
+                            </div>
+                        ` : ''}
+                    </div>
+
                     <a href="https://www.google.com/maps/search/${encodeURIComponent(h.name + ' Singapore')}" 
                        target="_blank" 
-                       class="block w-full text-center bg-blue-600 !text-white text-xs py-2 rounded-md hover:bg-blue-700 transition-colors font-bold shadow-sm"
+                       class="block w-full text-center bg-blue-600 !text-white text-[10px] py-1.5 rounded mt-2 hover:bg-blue-700 transition-colors font-bold shadow-sm"
                        style="color: white !important;">
                        Google Maps 查看
                     </a>
                 </div>
             `;
+        });
 
-            marker.bindPopup(popupContent);
-            marker.addTo(markerLayer);
-        }
+        popupContent += `</div>`;
+
+        marker.bindPopup(popupContent);
+        marker.addTo(markerLayer);
     });
 
     if (!map.hasLayer(markerLayer)) {
