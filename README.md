@@ -1,42 +1,47 @@
-# 🚀 Awesome Project Name 🚀
+# 🇸🇬 新加坡飯店挑選助手 🏨
 
 <p align="center">
-  <img src="https://your-awesome-logo.com/logo.png" alt="專案 Logo" width="200"/>
+  一個專為解決新加坡自由行住宿選擇困難而生的網頁工具！😎
+  <br />
+  透過多維度篩選和互動式地圖，幫助您快速找到最符合需求的理想飯店。
 </p>
-
-<p align="center">
-  一個超級酷炫的專案簡介！😎
-  <br />
-  <a href="#專案介紹"><strong>探索本專案 »</strong></a>
-  <br />
-  <br />
-  <a href="https://github.com/your-username/your-repo/issues">回報 Bug</a>
-  ·
-  <a href="https://github.com/your-username/your-repo/issues">請求新功能</a>
-</p>
-
----
-
-## 🌟 專案介紹 🌟
-
-歡迎來到 [Awesome Project Name]！這是一個能 [在這裡簡單描述您的專案，例如：解決...問題、提供...功能] 的開源專案。
-
-我們致力於打造一個 [高效能 / 超好用 / 創新] 的工具，希望能讓您的 [工作 / 生活 / 學習] 變得更輕鬆、更有趣！🎉
 
 ---
 
 ## 🔥 功能亮點 🔥
 
-*   **✨ 功能一：** [在這裡描述第一個超棒的功能]
-*   **💡 功能二：** [在這裡描述第二個令人驚豔的功能]
-*   **🔧 功能三：** [在這裡描述第三個實用的功能]
-*   **📱 跨平台支援：** 可在 Windows, macOS, 和 Linux 上順暢運行。
+*   **📊 多維度篩選：**
+    *   **最高預算 ($):** 自由拖動價格滑桿，預算內飯店一目了然。
+    *   **最小空間 (m²):** 確保您的住宿空間寬敞舒適。
+    *   **基礎政策:** 可單獨篩選出能夠免費取消的選項。
+
+*   **✅ 優選條件過濾：**
+    *   一鍵過濾掉有負面標籤（如：靠近紅燈區、隔音差、沙發床）或資訊不明的飯店。
+    *   同時也可以根據正面需求（如：游泳池、洗衣機）來篩選。
+
+*   **🗺️ 互動式地圖檢視：**
+    *   採用 **Leaflet.js** 打造，可隨時在列表與地圖模式間切換。
+    *   地圖上不僅標示出符合條件的飯店位置，還整合了新加坡的 **捷運 (MRT) 路線圖**。
+    *   特別標示出**芽籠紅燈區**範圍，供使用者參考。
+    *   若多間飯店位置相近，地圖標點會自動聚合，點擊即可展開查看。
+
+*   **🕵️ 隱藏除錯模式：**
+    *   連續點擊標題三次，即可開啟座標偵錯面板，輕鬆查看每間飯店的地理編碼狀態。
 
 ---
 
-## 🛠️ 安裝指南 🛠️
+## 🛠️ 技術棧 🛠️
 
-跟著以下步驟，輕鬆開始您的旅程！
+*   **前端框架:** 無！純粹使用 **Vanilla JavaScript (ESM)**，輕快無負擔。
+*   **CSS 框架:** **Tailwind CSS**，用於快速打造現代化的 UI 介面。
+*   **地圖函式庫:** **Leaflet.js**，一個強大且輕量的開源地圖函式庫。
+*   **地理編碼服務:** **OpenStreetMap Nominatim**，用於將飯店名稱轉換為地理座標。
+
+---
+
+## 🚀 如何在本機運行 🚀
+
+本專案為靜態網頁，但為了能正常讀取地圖資料 (捷運路線 GeoJSON)，您需要在本地啟動一個簡單的 Web Server 以避免 CORS 錯誤。
 
 1.  **複製專案**
     ```sh
@@ -46,52 +51,25 @@
     ```sh
     cd your-repo
     ```
-3.  **安裝相依套件** (範例)
+3.  **啟動本地伺服器** (以 Python 為例)
     ```sh
-    npm install
-    # 或是 pip install -r requirements.txt
+    # 如果您有 Python 3.x
+    python -m http.server 8000
     ```
-
----
-
-## 📖 如何使用 📖
-
-使用 [Awesome Project Name] 非常簡單！
-
-[在這裡提供一個簡單的使用範例或程式碼片段]
-
-```python
-# 範例程式碼
-import awesome_project
-
-result = awesome_project.do_something_cool()
-print(result)
-```
-
-更多詳細用法，請參考我們的 [文件](https://your-documentation-link.com)。
+4.  **開啟瀏覽器**
+    在瀏覽器中訪問 `http://localhost:8000` 即可開始使用！
 
 ---
 
 ## 🤝 如何貢獻 🤝
 
-我們非常歡迎社群的力量！如果您想為這個專案貢獻一份心力，請參考我們的 [CONTRIBUTING.md](CONTRIBUTING.md) 文件，裡面有詳細的說明。
+歡迎您為這個專案貢獻一份心力！
 
-您的任何貢獻，我們都感激不盡！❤️
-
-1.  Fork 本專案
-2.  建立您的功能分支 (`git checkout -b feature/AmazingFeature`)
-3.  提交您的變更 (`git commit -m 'Add some AmazingFeature'`)
-4.  推送到分支 (`git push origin feature/AmazingFeature`)
-5.  開啟一個 Pull Request
-
----
-
-## 📜 授權條款 📜
-
-本專案採用 MIT 授權條款。詳情請見 `LICENSE` 檔案。
+*   **新增或更新飯店資料:** 所有飯店的資訊都存放在 `data.js` 中。您可以參考檔案內的說明格式，直接新增或修改飯店資訊，然後發起一個 Pull Request。
+*   **回報 Bug 或建議新功能:** 請透過 [GitHub Issues](https://github.com/your-username/your-repo/issues) 讓我們知道！
 
 ---
 
 <p align="center">
-  Made with ❤️ by [Your Name]
+  Made with ❤️ for Singapore travelers.
 </p>
