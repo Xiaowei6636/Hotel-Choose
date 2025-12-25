@@ -2,7 +2,7 @@ export const hotels = [
     { name: "V Hotel Bencoolen", price: 6377, cancelable: false, size: 16, note: "", hasWiFi: true, hasPool: true, isRedLightDistrict: false },
     { name: "Hotel Mi Bencoolen", price: 6507, cancelable: true, size: 17, note: "", hasWiFi: true, isRedLightDistrict: false },
     { name: "Hotel Mi Rochor", price: 6627, cancelable: false, size: 17, note: "", hasWiFi: true, hasPool: true, isRedLightDistrict: false },
-    { name: "Furama RiverFront", price: 5360, cancelable: false, size: 30, note: "健身房/酒吧/水療服務", hasWiFi: true, hasPool: true, hasWashingMachine: true, isRedLightDistrict: false },
+    { name: "Furama RiverFront", price: 6702, cancelable: false, size: 30, note: "健身房/酒吧/水療服務/無客房清潔", hasWiFi: true, hasPool: true, hasWashingMachine: true, isRedLightDistrict: false },
     { name: "Owen House by Habyt", price: 8271, cancelable: false, size: 32, note: "機場接駁/酒吧/部分有廚房", hasWiFi: true, isRedLightDistrict: false },
     { name: "V Hotel Lavender", price: 6883, cancelable: false, size: 16, note: "酒吧", hasWiFi: true, hasPool: true, isRedLightDistrict: false },
     { name: "Hotel Classic by Venue", price: 4300, cancelable: true, size: 18, note: "部分無窗", hasWiFi: true, lat: 1.3159092188196442, lon: 103.8977450655825, isRedLightDistrict: true, isPoorSoundproofing: true },
