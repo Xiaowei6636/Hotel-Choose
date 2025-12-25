@@ -8,7 +8,7 @@ export const hotels = [
     { name: "Hotel Classic by Venue", price: 4300, cancelable: true, size: 18, note: "部分無窗", hasWiFi: true, lat: 1.3159092188196442, lon: 103.8977450655825, isRedLightDistrict: true, isPoorSoundproofing: true },
     { name: "Strand Hotel Singapore", price: 6500, cancelable: true, size: 18, hasFewOutlets: true, note: "三人房(18/2sig+1ex)/前2天14點前方可取消", hasWiFi: true, hasWashingMachine: true, isRedLightDistrict: false },
     { name: "Strand Hotel Singapore", price: 6800, cancelable: true, size: 20, hasFewOutlets: false, note: "三人房(20/2sig+1ex)/前2天14點前方可取消", hasWiFi: true, hasWashingMachine: true, isRedLightDistrict: false },
-    { name: "Strand Hotel Singapore", price: 8850, cancelable: true, size: 34, hasFewOutlets: false, note: "家庭房(2張雙人床/前2天14點前方可取消", hasWiFi: true, hasWashingMachine: true, isRedLightDistrict: false }
+    { name: "Strand Hotel Singapore", price: 8850, cancelable: true, size: 34, hasFewOutlets: false, note: "家庭房(2張雙人床)/前2天14點前方可取消", hasWiFi: true, hasWashingMachine: true, isRedLightDistrict: false }
 ];
 
 
