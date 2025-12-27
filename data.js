@@ -4,7 +4,7 @@ export const hotels = [
         "price": 6377,
         "cancelable": false,
         "size": 16,
-        "note": "房間大多整節乾淨但擁擠/服務好/飯店內有迷你超市(未證實)/號稱出站7秒可達/無瓶裝水/部份房間有異味或窗戶正對泳池/健身房",
+        "note": "房間大多整節乾淨但擁擠/服務好/號稱出站7秒可達/無瓶裝水/部份房間有異味或窗戶正對泳池/健身房",
         "hasWiFi": true,
         "hasPool": true,
         "isRedLightDistrict": false,
