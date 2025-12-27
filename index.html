@@ -10,6 +10,7 @@
 
     <meta name="apple-mobile-web-app-title" content="新加坡飯店">
     <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
 
     <!-- Leaflet CSS -->
@@ -19,7 +20,7 @@
 
     <!-- GitHub & Cookie Libraries -->
     <script src="https://cdn.jsdelivr.net/npm/js-cookie@3.0.5/dist/js.cookie.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/octokit@3.1.2/dist/octokit-core.min.js"></script>
+
 
     <link rel="stylesheet" href="style.css">
 </head>
@@ -160,7 +161,7 @@
             <div id="noResults" class="hidden text-center py-20 text-slate-400">
                 <svg class="mx-auto h-12 w-12 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="9.172 9.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        d="M9.172 9.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
                 <p class="text-lg font-medium">沒有符合條件的飯店</p>
                 <p class="text-sm">請調整篩選預算或嘗試減少優選條件的勾選</p>
@@ -209,9 +210,11 @@
         <div class="bg-white rounded-2xl shadow-xl p-8 w-full max-w-md m-4">
             <h2 class="text-2xl font-bold text-slate-800 mb-4">請提供您的 GitHub Personal Access Token</h2>
             <p class="text-slate-600 mb-6 text-sm">
-                為了提交您的變更，我們需要一個具有 <code
-                    class="bg-slate-100 text-slate-800 rounded px-1 py-0.5 font-mono text-xs">public_repo</code>
-                權限的 Personal Access Token (PAT)。此權杖將 <strong class="font-bold">僅儲存於您的瀏覽器中</strong>，並只用於此次操作。
+                為了提交變更，我們需要一個具有寫入權限的 Personal Access Token (PAT)。<br><br>
+                如果您選用 <b>Fine-grained PAT</b>，請確保：<br>
+                1. Repository access 選取此專案。<br>
+                2. Permissions 開啟 <b>Contents</b> 與 <b>Pull requests</b> 的 <code
+                    class="bg-slate-100 px-1">Read and write</code> 權限。<br><br>
                 <a href="https://github.com/settings/tokens?type=beta" target="_blank"
                     class="text-blue-600 hover:underline">在此處創建新的權杖</a>。
             </p>

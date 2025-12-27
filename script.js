@@ -1,4 +1,5 @@
 import { hotels } from './data.js';
+import { Octokit } from "https://esm.sh/@octokit/core";
 
 const grid = document.getElementById('hotelGrid');
 const noResults = document.getElementById('noResults');
@@ -524,7 +525,6 @@ async function updateLoginState() {
     const editButtons = document.querySelectorAll('.edit-btn');
 
     if (token) {
-        const { Octokit } = window.octokit;
         const octokit = new Octokit({ auth: token });
         try {
             const { data: { login, avatar_url } } = await octokit.request('GET /user');
@@ -656,7 +656,6 @@ async function submitChanges(event) {
         return;
     }
 
-    const { Octokit } = window.octokit;
     const octokit = new Octokit({ auth: token });
 
     const originalName = document.getElementById('edit-original-name').value;
@@ -670,13 +669,13 @@ async function submitChanges(event) {
     allTags.forEach(tag => {
         const checkbox = document.getElementById(`edit-tag-${tag.key}`);
         if (checkbox) {
-             updatedHotel[tag.key] = checkbox.checked;
+            updatedHotel[tag.key] = checkbox.checked;
         }
     });
 
     try {
-        const owner = ''; // IMPORTANT: Replace with the repo owner's username
-        const repo = ''; // IMPORTANT: Replace with the repo name
+        const owner = 'Xiaowei6636';
+        const repo = 'Hotel-Choose';
         const path = 'data.js';
 
         // 1. Get the latest commit SHA of the main branch and the file's current SHA
@@ -694,8 +693,17 @@ async function submitChanges(event) {
             ref: 'main' // Fetch from the base branch
         });
 
-        const currentContent = atob(currentContentBase64);
-        const hotelsArrayString = currentContent.substring(currentContent.indexOf('['));
+        const currentContent = decodeURIComponent(escape(atob(currentContentBase64)));
+
+        // 尋找陣列的起始與結束位置
+        const arrayStart = currentContent.indexOf('[');
+        const arrayEnd = currentContent.lastIndexOf('];');
+
+        // 擷取陣列後的內容（例如註解）
+        const trailingContent = arrayEnd !== -1 ? currentContent.substring(arrayEnd + 2) : '';
+
+        // 擷取陣列字串
+        const hotelsArrayString = currentContent.substring(arrayStart, arrayLastIndex !== -1 ? arrayLastIndex + 1 : undefined);
 
         // Using a safer method to convert string to array of objects
         const tempHotels = new Function('return ' + hotelsArrayString)();
@@ -708,7 +716,7 @@ async function submitChanges(event) {
 
         // Convert back to a nicely formatted string
         const newHotelsArrayString = JSON.stringify(tempHotels, null, 4);
-        const newContent = `export const hotels = ${newHotelsArrayString};`;
+        const newContent = `export const hotels = ${newHotelsArrayString};${trailingContent}`;
 
         // 3. Create a new branch
         const branchName = `update-${originalName.toLowerCase().replace(/\s+/g, '-')}-${Date.now()}`;
@@ -725,8 +733,8 @@ async function submitChanges(event) {
             repo,
             path,
             message: `Update ${originalName} data`,
-            content: btoa(newContent),
-            sha: (await octokit.request('GET /repos/{owner}/{repo}/contents/{path}?ref=${branchName}', { owner, repo, path, branch: branchName })).data.sha,
+            content: btoa(unescape(encodeURIComponent(newContent))),
+            sha: (await octokit.request('GET /repos/{owner}/{repo}/contents/{path}?ref={ref}', { owner, repo, path, ref: branchName })).data.sha,
             branch: branchName
         });
 
