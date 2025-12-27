@@ -32,6 +32,7 @@ const State = {
     isMapView: false,
     markerLayer: L.layerGroup(),
     pendingEditIndex: null,
+    dataSha: null,
 };
 
 /**
@@ -270,6 +271,30 @@ const GitHubService = {
             head: branchName, base: 'main',
             body: prBody
         });
+    },
+
+    async checkForUpdates() {
+        const owner = CONFIG.REPO_OWNER;
+        const repo = CONFIG.REPO_NAME;
+        const path = 'data.js';
+
+        try {
+            const octokit = this.getOctokit() || new Octokit();
+            const { data: { sha: latestSha } } = await octokit.request('GET /repos/{owner}/{repo}/contents/{path}', {
+                owner, repo, path, ref: 'main'
+            });
+
+            if (!State.dataSha) {
+                State.dataSha = latestSha;
+                console.log(`已記錄 data.js 初始版本: ${latestSha.substring(0, 7)}`);
+            } else if (State.dataSha !== latestSha) {
+                console.log(`偵測到 data.js 更新！從 ${State.dataSha.substring(0, 7)} -> ${latestSha.substring(0, 7)}`);
+                UI.showUpdateToast();
+                State.dataSha = latestSha; // 更新 SHA 以免重複提示
+            }
+        } catch (error) {
+            console.error('檢查更新時發生錯誤:', error);
+        }
     }
 };
 
@@ -654,6 +679,24 @@ const UI = {
         }, duration);
     },
 
+    showUpdateToast() {
+        const toastHTML = `
+            <div class="flex items-center justify-between">
+                <div>
+                    <div class="text-sky-600 font-bold flex items-center gap-2 mb-1">
+                        <div class="bg-sky-100 p-1 rounded-full">
+                           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h5"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 20v-5h-5"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 9a9 9 0 0 1 9-5.917V0"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 15a9 9 0 0 1-9 5.917V24"></path></svg>
+                        </div>
+                        偵測到資料更新
+                    </div>
+                    <div class="text-slate-600 text-xs leading-relaxed">飯店列表已變更，點擊按鈕以重新載入。</div>
+                </div>
+                <button onclick="location.reload()" class="ml-4 flex-shrink-0 bg-sky-600 text-white text-xs font-bold px-4 py-2 rounded-lg hover:bg-sky-700 transition-colors">立即重整</button>
+            </div>
+        `;
+        this.showToast(toastHTML, 180000); // 顯示 3 分鐘
+    },
+
     renderDebugList() {
         this.elements.debugList.innerHTML = '';
         hotels.forEach(h => {
@@ -678,3 +721,7 @@ const UI = {
  */
 UI.init();
 MapService.geocodeAll();
+
+// 啟動更新檢查
+GitHubService.checkForUpdates();
+setInterval(() => GitHubService.checkForUpdates(), 60000);
