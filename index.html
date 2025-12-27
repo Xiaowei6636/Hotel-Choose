@@ -230,46 +230,56 @@
     </div>
 
     <!-- Edit Hotel Modal -->
-    <div id="edit-modal" class="hidden fixed inset-0 z-[3000] bg-slate-900/60 flex items-center justify-center">
-        <div class="bg-white rounded-2xl shadow-xl p-8 w-full max-w-2xl m-4">
-            <form id="edit-form">
-                <h2 class="text-2xl font-bold text-slate-800 mb-6">編輯 <span id="edit-hotel-name"
+    <div id="edit-modal" class="hidden fixed inset-0 z-[3000] bg-slate-900/60 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-xl w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden">
+            <!-- Header (Fixed) -->
+            <div class="px-8 py-5 border-b border-slate-100 bg-white">
+                <h2 class="text-2xl font-bold text-slate-800">編輯 <span id="edit-hotel-name"
                         class="text-blue-600"></span></h2>
-                <input type="hidden" id="edit-original-name">
+            </div>
 
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <form id="edit-form" class="flex flex-col flex-grow overflow-hidden">
+                <!-- Scrollable Content Area -->
+                <div class="p-8 overflow-y-auto space-y-8 flex-grow custom-scrollbar">
+                    <input type="hidden" id="edit-original-name">
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label for="edit-price" class="block text-sm font-bold text-slate-700 mb-2">價格 ($)</label>
+                            <input type="number" id="edit-price" name="price"
+                                class="w-full border-slate-200 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+                        <div>
+                            <label for="edit-size" class="block text-sm font-bold text-slate-700 mb-2">空間 (m²)</label>
+                            <input type="number" id="edit-size" name="size"
+                                class="w-full border-slate-200 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+                    </div>
+
                     <div>
-                        <label for="edit-price" class="block text-sm font-bold text-slate-700 mb-2">價格 ($)</label>
-                        <input type="number" id="edit-price" name="price"
-                            class="w-full border-slate-300 rounded-lg shadow-sm">
+                        <label for="edit-note" class="block text-sm font-bold text-slate-700 mb-2">備註</label>
+                        <textarea id="edit-note" name="note" rows="3"
+                            class="w-full border-slate-200 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500"></textarea>
                     </div>
+
                     <div>
-                        <label for="edit-size" class="block text-sm font-bold text-slate-700 mb-2">空間 (m²)</label>
-                        <input type="number" id="edit-size" name="size"
-                            class="w-full border-slate-300 rounded-lg shadow-sm">
+                        <label
+                            class="block text-sm font-bold text-slate-700 mb-4 uppercase tracking-wider text-xs">標籤狀態設定</label>
+                        <div id="edit-tags-container" class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            <!-- Selects will be dynamically inserted here -->
+                        </div>
                     </div>
                 </div>
 
-                <div class="mt-6">
-                    <label for="edit-note" class="block text-sm font-bold text-slate-700 mb-2">備註</label>
-                    <textarea id="edit-note" name="note" rows="3"
-                        class="w-full border-slate-300 rounded-lg shadow-sm"></textarea>
-                </div>
-
-                <div class="mt-6">
-                    <label class="block text-sm font-bold text-slate-700 mb-4">標籤</label>
-                    <div id="edit-tags-container" class="grid grid-cols-2 md:grid-cols-3 gap-4">
-                        <!-- Checkboxes will be dynamically inserted here -->
-                    </div>
-                </div>
-
-                <div class="mt-8 pt-6 border-t border-slate-200 flex justify-between items-center">
-                    <div id="pr-feedback" class="text-sm"></div>
-                    <div class="flex gap-4">
+                <!-- Footer (Fixed) -->
+                <div
+                    class="px-8 py-5 bg-slate-50 border-t border-slate-200 flex flex-col md:flex-row justify-between items-center gap-4">
+                    <div id="pr-feedback" class="text-sm font-medium"></div>
+                    <div class="flex gap-4 w-full md:w-auto">
                         <button type="button" id="cancel-edit-btn"
-                            class="text-slate-600 font-semibold px-4 py-2 rounded-lg hover:bg-slate-100">取消</button>
+                            class="flex-1 md:flex-none text-slate-600 font-semibold px-6 py-2.5 rounded-lg hover:bg-slate-200 transition-colors">取消</button>
                         <button type="submit" id="save-edit-btn"
-                            class="bg-blue-600 text-white font-bold px-6 py-2 rounded-lg hover:bg-blue-700 flex items-center">
+                            class="flex-1 md:flex-none bg-blue-600 text-white font-bold px-8 py-2.5 rounded-lg hover:bg-blue-700 flex items-center justify-center shadow-lg shadow-blue-200 transition-all active:scale-95">
                             <span id="save-btn-text">儲存並建立 PR</span>
                             <svg id="loading-spinner" class="animate-spin -ml-1 mr-3 h-5 w-5 text-white hidden"
                                 xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
