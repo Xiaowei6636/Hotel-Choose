@@ -88,7 +88,9 @@ export const hotels = [
         "note": "三人房(18/2sig+1ex)/前2天14點前方可取消",
         "hasWiFi": true,
         "hasWashingMachine": true,
-        "isRedLightDistrict": false
+        "isRedLightDistrict": false,
+        "isSafeLocation": true,
+        "hasPlentyOutlets": false
     },
     {
         "name": "Strand Hotel Singapore",
