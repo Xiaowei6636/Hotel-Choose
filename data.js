@@ -56,7 +56,7 @@ export const hotels = [
     },
     {
         "name": "Hotel Classic by Venue",
-        "price": 4300,
+        "price": 43000000,
         "cancelable": true,
         "size": 18,
         "note": "部分無窗",
