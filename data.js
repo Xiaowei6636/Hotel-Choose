@@ -65,7 +65,8 @@ export const hotels = [
         "note": "酒吧",
         "hasWiFi": true,
         "hasPool": true,
-        "isRedLightDistrict": false
+        "isRedLightDistrict": false,
+        "isSafeLocation": true
     },
     {
         "name": "Hotel Classic by Venue",
