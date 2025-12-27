@@ -201,8 +201,8 @@ function renderHotels() {
         currentFilteredHotels.forEach(h => {
             const isEditable = !!Cookies.get(TOKEN_COOKIE);
             const card = document.createElement('div');
-            card.className = `hotel-card bg-white rounded-2xl overflow-hidden shadow-sm border border-slate-100 flex flex-col ${isEditable ? 'cursor-pointer hover:border-blue-200 transition-all' : ''}`;
-            if (isEditable) card.dataset.hotelName = h.name;
+            card.className = `hotel-card bg-white rounded-2xl overflow-hidden shadow-sm border border-slate-100 flex flex-col cursor-pointer hover:border-blue-200 transition-all`;
+            card.dataset.hotelName = h.name;
 
             const mapUrl = `https://www.google.com/maps/search/${encodeURIComponent(h.name + ' Singapore')}`;
 
@@ -547,7 +547,7 @@ async function updateLoginState() {
             }
         }
     } else {
-        loginBtn.classList.remove('hidden');
+        loginBtn.classList.add('hidden');
         userInfo.classList.add('hidden');
     }
 
@@ -636,7 +636,12 @@ document.getElementById('save-pat-btn').addEventListener('click', () => {
 grid.addEventListener('click', (e) => {
     const card = e.target.closest('.hotel-card');
     if (card && card.dataset.hotelName) {
-        openEditModal(card.dataset.hotelName);
+        const token = Cookies.get(TOKEN_COOKIE);
+        if (token) {
+            openEditModal(card.dataset.hotelName);
+        } else {
+            patModal.classList.remove('hidden');
+        }
     }
 });
 
