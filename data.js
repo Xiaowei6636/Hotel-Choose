@@ -35,7 +35,8 @@ export const hotels = [
         "note": "",
         "hasWiFi": true,
         "hasPool": true,
-        "isRedLightDistrict": false
+        "isRedLightDistrict": false,
+        "isSafeLocation": true
     },
     {
         "name": "Furama RiverFront",
