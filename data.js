@@ -19,6 +19,7 @@ export const hotels = [
  * - isRedLightDistrict: true   (靠近紅燈區)
  * - isPoorSoundproofing: true  (隔音較差)
  * - hasSofaBed: true           (有沙發床)
+ * - hasNoBaggageStorage: true  (無行李寄放)
  * - hasFewOutlets: true        (插座少)
  * - hasWiFi: true              (包含WiFi)
  * - hasPool: true              (包含游泳池)

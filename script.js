@@ -10,6 +10,7 @@ const cancelableOnly = document.getElementById('cancelableOnly');
 const safeAreaFilter = document.getElementById('safeAreaFilter');
 const goodSoundFilter = document.getElementById('goodSoundFilter');
 const realBedFilter = document.getElementById('realBedFilter');
+const hasBaggageFilter = document.getElementById('hasBaggageFilter');
 const plentyOutletsFilter = document.getElementById('plentyOutletsFilter');
 const wifiFilter = document.getElementById('wifiFilter');
 const poolFilter = document.getElementById('poolFilter');
@@ -180,6 +181,7 @@ function renderHotels() {
         const safeAreaMatch = !safeAreaFilter.checked || (h.isRedLightDistrict === false);
         const goodSoundMatch = !goodSoundFilter.checked || (h.isPoorSoundproofing === false);
         const realBedMatch = !realBedFilter.checked || (h.hasSofaBed === false);
+        const baggageMatch = !hasBaggageFilter.checked || (h.hasNoBaggageStorage === false);
         const outletMatch = !plentyOutletsFilter.checked || (h.hasFewOutlets === false);
         const wifiMatch = !wifiFilter.checked || h.hasWiFi;
         const poolMatch = !poolFilter.checked || h.hasPool;
@@ -187,7 +189,7 @@ function renderHotels() {
 
         return priceMatch && sizeMatch && cancelMatch &&
             safeAreaMatch && goodSoundMatch &&
-            realBedMatch && outletMatch &&
+            realBedMatch && baggageMatch && outletMatch &&
             wifiMatch && poolMatch && washerMatch;
     });
 
@@ -208,6 +210,7 @@ function renderHotels() {
                 { val: h.isRedLightDistrict, label: '靠近紅燈區' },
                 { val: h.isPoorSoundproofing, label: '隔音差' },
                 { val: h.hasSofaBed, label: '沙發床' },
+                { val: h.hasNoBaggageStorage, label: '無行李寄放' },
                 { val: h.hasFewOutlets, label: '插座少' },
                 { val: h.hasWiFi, label: 'WiFi', isPositive: true },
                 { val: h.hasPool, label: '游泳池', isPositive: true },
@@ -314,7 +317,7 @@ function renderHotels() {
 const allFilters = [
     priceRange, sizeFilter, cancelableOnly,
     safeAreaFilter, goodSoundFilter, realBedFilter,
-    plentyOutletsFilter,
+    hasBaggageFilter, plentyOutletsFilter,
     wifiFilter, poolFilter, washerFilter
 ];
 
