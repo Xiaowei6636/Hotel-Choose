@@ -46,7 +46,8 @@ export const hotels = [
         "hasWiFi": true,
         "hasPool": true,
         "hasWashingMachine": true,
-        "isRedLightDistrict": false
+        "isRedLightDistrict": false,
+        "isSafeLocation": true
     },
     {
         "name": "Owen House by Habyt",
