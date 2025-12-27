@@ -500,6 +500,9 @@ const UI = {
         const h = isAdd ? { name: '', price: 5000, size: 20 } : hotels[idx];
         if (!h) return;
 
+        // 清除舊的回饋訊息
+        document.getElementById('pr-feedback').textContent = '';
+
         const titleEl = document.getElementById('edit-modal-title');
         if (isAdd) {
             titleEl.innerHTML = '新增飯店';
@@ -584,13 +587,13 @@ const UI = {
         try {
             const res = await GitHubService.createPR(data, hotelIndex, originalName, action);
             feedback.innerHTML = `成功！已建立 <a href="${res.data.html_url}" target="_blank" class="text-blue-600 underline">PR #${res.data.number}</a>`;
-            setTimeout(() => this.elements.editModal.classList.add('hidden'), 5000);
+            setTimeout(() => this.elements.editModal.classList.add('hidden'), 3000);
         } catch (err) {
             console.error(err);
             feedback.textContent = `錯誤: ${err.message}`;
+        } finally {
             saveBtn.disabled = false;
             deleteBtn.disabled = false;
-        } finally {
             btnText.textContent = originalBtnText;
             btnText.classList.remove('hidden');
             spinner.classList.add('hidden');
