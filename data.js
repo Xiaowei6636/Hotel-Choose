@@ -123,6 +123,20 @@ export const hotels = [
         "isRedLightDistrict": false,
         "isSafeLocation": true,
         "hasPlentyOutlets": true
+    },
+    {
+        "name": "天價飯店",
+        "price": 99999,
+        "size": 1,
+        "note": "",
+        "cancelable": false,
+        "isSafeLocation": false,
+        "isSoundproof": false,
+        "hasRealBed": false,
+        "hasPlentyOutlets": false,
+        "hasWiFi": false,
+        "hasPool": false,
+        "hasWashingMachine": false
     }
 ];
 
