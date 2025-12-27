@@ -112,7 +112,9 @@ export const hotels = [
         "note": "家庭房(2張雙人床)/前2天14點前方可取消",
         "hasWiFi": true,
         "hasWashingMachine": true,
-        "isRedLightDistrict": false
+        "isRedLightDistrict": false,
+        "isSafeLocation": true,
+        "hasPlentyOutlets": true
     }
 ];
 
