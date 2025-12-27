@@ -31,6 +31,7 @@ const State = {
     map: null,
     isMapView: false,
     markerLayer: L.layerGroup(),
+    pendingEditIndex: null,
 };
 
 /**
@@ -165,7 +166,7 @@ const MapService = {
                         </div>
                         <div class="text-sm text-slate-600 mt-1">${h.size} m²</div>
                         ${h.note ? `<div class="text-xs italic bg-slate-50 p-1.5 rounded mt-1 border">${h.note}</div>` : ''}
-                        <a href="https://www.google.com/maps/search/${encodeURIComponent(h.name + ' Singapore')}" target="_blank" class="block w-full text-center bg-blue-600 text-white text-[10px] py-1.5 rounded mt-2 font-bold">Google Maps 查看</a>
+                        <a href="https://www.google.com/maps/search/${encodeURIComponent(h.name + ' Singapore')}" target="_blank" class="block w-full text-center bg-blue-600 !text-white text-[10px] py-1.5 rounded mt-2 font-bold">查看地圖</a>
                     </div>
                 `;
             });
@@ -347,7 +348,12 @@ const UI = {
             if (pat) {
                 Cookies.set(CONFIG.TOKEN_COOKIE, pat, { expires: 30 });
                 this.elements.patModal.classList.add('hidden');
-                this.updateLoginState();
+                this.updateLoginState().then(() => {
+                    if (State.pendingEditIndex !== null) {
+                        this.openEditModal(State.pendingEditIndex);
+                        State.pendingEditIndex = null;
+                    }
+                });
             }
         });
         document.getElementById('cancel-pat-btn').addEventListener('click', () => this.elements.patModal.classList.add('hidden'));
@@ -358,7 +364,13 @@ const UI = {
         this.elements.grid.addEventListener('click', (e) => {
             const card = e.target.closest('.hotel-card');
             if (card && card.dataset.index !== undefined) {
-                Cookies.get(CONFIG.TOKEN_COOKIE) ? this.openEditModal(parseInt(card.dataset.index)) : this.elements.patModal.classList.remove('hidden');
+                const index = parseInt(card.dataset.index);
+                if (Cookies.get(CONFIG.TOKEN_COOKIE)) {
+                    this.openEditModal(index);
+                } else {
+                    State.pendingEditIndex = index;
+                    this.elements.patModal.classList.remove('hidden');
+                }
             }
         });
         document.getElementById('edit-form').addEventListener('submit', (e) => this.handleEditSubmit(e));
@@ -367,14 +379,26 @@ const UI = {
     },
 
     async updateLoginState() {
-        const user = await GitHubService.getUserInfo();
-        if (user) {
-            this.elements.userAvatar.src = user.avatar_url;
-            this.elements.userLogin.textContent = user.login;
+        try {
+            const user = await GitHubService.getUserInfo();
+            if (user) {
+                console.log('GitHub 登入成功:', user.login);
+                this.elements.userAvatar.src = user.avatar_url;
+                this.elements.userLogin.textContent = user.login;
+                this.elements.loginBtn.classList.add('hidden');
+
+                // 確保顯示使用者資訊區塊
+                this.elements.userInfo.classList.remove('hidden');
+                this.elements.userInfo.classList.add('flex');
+            } else {
+                console.log('未登入或 GitHub Token 無效');
+                this.elements.loginBtn.classList.add('hidden'); // 依要求平常隱藏
+                this.elements.userInfo.classList.add('hidden');
+                this.elements.userInfo.classList.remove('flex');
+            }
+        } catch (err) {
+            console.error('更新登入狀態時發生錯誤:', err);
             this.elements.loginBtn.classList.add('hidden');
-            this.elements.userInfo.classList.replace('hidden', 'flex');
-        } else {
-            this.elements.loginBtn.classList.remove('hidden');
             this.elements.userInfo.classList.add('hidden');
         }
         this.filterHotels(); // 重繪以反映編輯權限
@@ -586,8 +610,14 @@ const UI = {
 
         try {
             const res = await GitHubService.createPR(data, hotelIndex, originalName, action);
-            feedback.innerHTML = `成功！已建立 <a href="${res.data.html_url}" target="_blank" class="text-blue-600 underline">PR #${res.data.number}</a>`;
-            setTimeout(() => this.elements.editModal.classList.add('hidden'), 3000);
+            feedback.innerHTML = `
+                <div class="text-emerald-600 font-bold flex items-center gap-1">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                    提交成功！已建立 <a href="${res.data.html_url}" target="_blank" class="text-blue-600 underline">PR #${res.data.number}</a>
+                </div>
+                <div class="text-slate-500 text-xs mt-1">變更請求已送出，請等待管理員審核並合併後，最新的飯店資訊將會自動更新。</div>
+            `;
+            setTimeout(() => this.elements.editModal.classList.add('hidden'), 2000);
         } catch (err) {
             console.error(err);
             feedback.textContent = `錯誤: ${err.message}`;
