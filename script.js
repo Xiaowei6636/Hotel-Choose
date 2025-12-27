@@ -1,3 +1,4 @@
+import { hotels } from './data.js';
 import { Octokit } from "https://esm.sh/@octokit/core";
 
 /**
@@ -26,8 +27,6 @@ const CONFIG = {
  */
 const State = {
     coordsCache: JSON.parse(localStorage.getItem(CONFIG.CACHE_KEY) || '{}'),
-    hotels: [], // 從 GitHub 動態載入
-    lastKnownRawData: null, // 用於比對是否有更新
     currentFilteredHotels: [],
     map: null,
     isMapView: false,
@@ -70,7 +69,7 @@ const MapService = {
     },
 
     async geocodeAll() {
-        for (const h of State.hotels) {
+        for (const h of hotels) {
             if (h.lat && h.lon) {
                 State.coordsCache[h.name] = { lat: h.lat, lon: h.lon };
                 this.updateMarkers();
@@ -199,31 +198,6 @@ const GitHubService = {
         }
     },
 
-    async fetchHotels(getRaw = false) {
-        const owner = CONFIG.REPO_OWNER;
-        const repo = CONFIG.REPO_NAME;
-        const path = 'data.js';
-
-        try {
-            const rawUrl = `https://raw.githubusercontent.com/${owner}/${repo}/main/${path}?t=${Date.now()}`;
-            const response = await fetch(rawUrl);
-            const content = await response.text();
-
-            if (getRaw) return content;
-
-            const arrayStart = content.indexOf('[');
-            const arrayEnd = content.lastIndexOf('];');
-            const hotelsArrayString = content.substring(arrayStart, arrayEnd !== -1 ? arrayEnd + 1 : undefined);
-
-            return new Function('return ' + hotelsArrayString)();
-        } catch (e) {
-            console.error("無法載入即時飯店資料:", e);
-            if (getRaw) return "";
-            const localData = await import('./data.js');
-            return localData.hotels;
-        }
-    },
-
     async createPR(updatedHotel, hotelIndexInOriginal, originalName, action = 'update') {
         const octokit = this.getOctokit();
         if (!octokit) throw new Error("未登入 GitHub");
@@ -328,32 +302,10 @@ const UI = {
         editTagsContainer: document.getElementById('edit-tags-container')
     },
 
-    async init() {
+    init() {
         this.bindEvents();
-        await this.updateLoginState();
-
-        // 即時載入資料
-        const content = await GitHubService.fetchHotels(true);
-        State.lastKnownRawData = content;
-
-        const arrayStart = content.indexOf('[');
-        const arrayEnd = content.lastIndexOf('];');
-        const hotelsArrayString = content.substring(arrayStart, arrayEnd !== -1 ? arrayEnd + 1 : undefined);
-        State.hotels = new Function('return ' + hotelsArrayString)();
-
+        this.updateLoginState();
         this.filterHotels();
-        MapService.geocodeAll();
-
-        // 啟動每分鐘檢查
-        setInterval(() => this.checkDataUpdate(), 60000);
-    },
-
-    async checkDataUpdate() {
-        const currentRaw = await GitHubService.fetchHotels(true);
-        if (currentRaw && State.lastKnownRawData && currentRaw !== State.lastKnownRawData) {
-            const banner = document.getElementById('update-banner');
-            if (banner) banner.classList.remove('hidden');
-        }
     },
 
     bindEvents() {
@@ -449,7 +401,7 @@ const UI = {
         const maxPrice = parseInt(this.elements.priceRange.value);
         const minSize = parseInt(this.elements.sizeFilter.value);
 
-        State.currentFilteredHotels = State.hotels.filter(h => {
+        State.currentFilteredHotels = hotels.filter(h => {
             // 基本預算與空間過濾
             if (h.price > maxPrice) return false;
             if (minSize > 0 && h.size < minSize) return false;
@@ -477,7 +429,7 @@ const UI = {
         State.currentFilteredHotels.forEach(h => {
             const card = document.createElement('div');
             card.className = `hotel-card bg-white rounded-2xl overflow-hidden shadow-sm border border-slate-100 flex flex-col cursor-pointer hover:border-blue-200 transition-all`;
-            card.dataset.index = State.hotels.indexOf(h);
+            card.dataset.index = hotels.indexOf(h);
 
             // 準備標籤並進行排序 (true > false > undefined)
             const tagHTML = CONFIG.ALL_TAGS
@@ -545,7 +497,7 @@ const UI = {
 
     openEditModal(idx) {
         const isAdd = idx === -1;
-        const h = isAdd ? { name: '', price: 5000, size: 20 } : State.hotels[idx];
+        const h = isAdd ? { name: '', price: 5000, size: 20 } : hotels[idx];
         if (!h) return;
 
         // 清除舊的回饋訊息
@@ -634,8 +586,8 @@ const UI = {
 
         try {
             const res = await GitHubService.createPR(data, hotelIndex, originalName, action);
-            feedback.innerHTML = `成功！已建立 <a href="${res.data.html_url}" target="_blank" class="text-blue-600 underline">PR #${res.data.number}</a>。正在重新載入資料...`;
-            setTimeout(() => location.reload(), 2000);
+            feedback.innerHTML = `成功！已建立 <a href="${res.data.html_url}" target="_blank" class="text-blue-600 underline">PR #${res.data.number}</a>`;
+            setTimeout(() => this.elements.editModal.classList.add('hidden'), 3000);
         } catch (err) {
             console.error(err);
             feedback.textContent = `錯誤: ${err.message}`;
@@ -650,7 +602,7 @@ const UI = {
 
     renderDebugList() {
         this.elements.debugList.innerHTML = '';
-        State.hotels.forEach(h => {
+        hotels.forEach(h => {
             const isManual = h.lat && h.lon;
             const coords = isManual ? { lat: h.lat, lon: h.lon } : State.coordsCache[h.name];
             const item = document.createElement('div');
@@ -671,3 +623,4 @@ const UI = {
  * --- 初始化 ---
  */
 UI.init();
+MapService.geocodeAll();
