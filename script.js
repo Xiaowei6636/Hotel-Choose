@@ -203,6 +203,8 @@ function renderHotels() {
             const card = document.createElement('div');
             card.className = `hotel-card bg-white rounded-2xl overflow-hidden shadow-sm border border-slate-100 flex flex-col cursor-pointer hover:border-blue-200 transition-all`;
             card.dataset.hotelName = h.name;
+            // 記錄該飯店在原始 hotels 陣列中的索引
+            card.dataset.index = hotels.indexOf(h);
 
             const mapUrl = `https://www.google.com/maps/search/${encodeURIComponent(h.name + ' Singapore')}`;
 
@@ -569,12 +571,13 @@ const allTags = [
     { key: 'hasWashingMachine', label: '洗衣機', type: 'amenity' },
 ];
 
-function openEditModal(hotelName) {
-    const hotel = hotels.find(h => h.name === hotelName);
+function openEditModal(hotelIndex) {
+    const hotel = hotels[hotelIndex];
     if (!hotel) return;
 
     document.getElementById('edit-hotel-name').textContent = hotel.name;
     document.getElementById('edit-original-name').value = hotel.name;
+    document.getElementById('edit-hotel-index').value = hotelIndex;
     document.getElementById('edit-price').value = hotel.price;
     document.getElementById('edit-size').value = hotel.size;
     document.getElementById('edit-note').value = hotel.note || '';
@@ -635,10 +638,10 @@ document.getElementById('save-pat-btn').addEventListener('click', () => {
 
 grid.addEventListener('click', (e) => {
     const card = e.target.closest('.hotel-card');
-    if (card && card.dataset.hotelName) {
+    if (card && card.dataset.index !== undefined) {
         const token = Cookies.get(TOKEN_COOKIE);
         if (token) {
-            openEditModal(card.dataset.hotelName);
+            openEditModal(card.dataset.index);
         } else {
             patModal.classList.remove('hidden');
         }
@@ -671,6 +674,7 @@ async function submitChanges(event) {
     const octokit = new Octokit({ auth: token });
 
     const originalName = document.getElementById('edit-original-name').value;
+    const hotelIndexInOriginal = parseInt(document.getElementById('edit-hotel-index').value);
     const updatedHotel = {
         name: originalName, // Name is the key, should not be changed in this UI
         price: parseInt(document.getElementById('edit-price').value),
@@ -679,9 +683,16 @@ async function submitChanges(event) {
     };
 
     allTags.forEach(tag => {
-        const checkbox = document.getElementById(`edit-tag-${tag.key}`);
-        if (checkbox) {
-            updatedHotel[tag.key] = checkbox.checked;
+        const select = document.getElementById(`edit-tag-${tag.key}`);
+        if (select) {
+            const val = select.value;
+            if (val === 'true') {
+                updatedHotel[tag.key] = true;
+            } else if (val === 'false') {
+                updatedHotel[tag.key] = false;
+            } else {
+                updatedHotel[tag.key] = undefined;
+            }
         }
     });
 
@@ -717,13 +728,19 @@ async function submitChanges(event) {
         // 擷取陣列字串
         const hotelsArrayString = currentContent.substring(arrayStart, arrayEnd !== -1 ? arrayEnd + 1 : undefined);
 
-        // Using a safer method to convert string to array of objects
+        // 2. 將字串轉換為陣列物件
         const tempHotels = new Function('return ' + hotelsArrayString)();
 
-        const hotelIndex = tempHotels.findIndex(h => h.name === originalName);
+        // 優先使用索引定位，並再次驗證名稱確保精準
+        let hotelIndex = hotelIndexInOriginal;
+        if (!tempHotels[hotelIndex] || tempHotels[hotelIndex].name !== originalName) {
+            // 如果索引失效（例如檔案被他人改動），則退回使用名稱搜尋
+            hotelIndex = tempHotels.findIndex(h => h.name === originalName);
+        }
+
         if (hotelIndex === -1) throw new Error("Hotel not found in data.js");
 
-        // Merge existing data with updated data
+        // 3. 僅更新被編輯的飯店資料
         tempHotels[hotelIndex] = { ...tempHotels[hotelIndex], ...updatedHotel };
 
         // Convert back to a nicely formatted string
