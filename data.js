@@ -56,15 +56,11 @@ export const hotels = [
     },
     {
         "name": "Hotel Classic by Venue",
-        "price": 4300,
-        "cancelable": true,
+        "price": 4300000000,
         "size": 18,
         "note": "部分無窗",
-        "hasWiFi": true,
         "lat": 1.3159092188196442,
-        "lon": 103.8977450655825,
-        "isRedLightDistrict": true,
-        "isPoorSoundproofing": true
+        "lon": 103.8977450655825
     },
     {
         "name": "Strand Hotel Singapore",
