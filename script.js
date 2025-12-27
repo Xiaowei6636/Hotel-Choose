@@ -585,17 +585,21 @@ function openEditModal(hotelName) {
 
     editTagsContainer.innerHTML = '';
     allTags.forEach(tag => {
-        const isChecked = hotel[tag.key] === true;
-        const checkboxId = `edit-tag-${tag.key}`;
-        const label = document.createElement('label');
-        label.htmlFor = checkboxId;
-        label.className = 'flex items-center p-2 bg-slate-50 rounded-lg border border-transparent hover:border-slate-200 transition-all cursor-pointer';
-        label.innerHTML = `
-            <input type="checkbox" id="${checkboxId}" name="${tag.key}" ${isChecked ? 'checked' : ''}
-                   class="w-4 h-4 text-blue-600 border-slate-300 rounded focus:ring-blue-500">
-            <span class="ml-2 text-xs md:text-sm text-slate-600">${tag.label}</span>
+        const val = hotel[tag.key];
+        const selectId = `edit-tag-${tag.key}`;
+
+        const wrapper = document.createElement('div');
+        wrapper.className = 'flex flex-col gap-1.5 p-3 bg-slate-50 rounded-xl border border-slate-100';
+        wrapper.innerHTML = `
+            <label for="${selectId}" class="text-[11px] font-bold text-slate-500 uppercase tracking-wider">${tag.label}</label>
+            <select id="${selectId}" name="${tag.key}" 
+                    class="bg-white border-slate-200 rounded-lg text-sm focus:ring-blue-500 focus:border-blue-500 p-1.5 outline-none">
+                <option value="undefined" ${val === undefined ? 'selected' : ''}>❓ 未提供</option>
+                <option value="true" ${val === true ? 'selected' : ''}>✅ 是 / 有</option>
+                <option value="false" ${val === false ? 'selected' : ''}>❌ 否 / 無</option>
+            </select>
         `;
-        editTagsContainer.appendChild(label);
+        editTagsContainer.appendChild(wrapper);
     });
 
     editModal.classList.remove('hidden');
