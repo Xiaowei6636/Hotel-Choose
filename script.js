@@ -300,7 +300,9 @@ const UI = {
         deleteHotelBtn: document.getElementById('delete-hotel-btn'),
         patModal: document.getElementById('pat-modal'),
         editModal: document.getElementById('edit-modal'),
-        editTagsContainer: document.getElementById('edit-tags-container')
+        editTagsContainer: document.getElementById('edit-tags-container'),
+        toast: document.getElementById('toast'),
+        toastContent: document.getElementById('toast-content')
     },
 
     init() {
@@ -524,9 +526,6 @@ const UI = {
         const h = isAdd ? { name: '', price: 5000, size: 20 } : hotels[idx];
         if (!h) return;
 
-        // 清除舊的回饋訊息
-        document.getElementById('pr-feedback').textContent = '';
-
         const titleEl = document.getElementById('edit-modal-title');
         if (isAdd) {
             titleEl.innerHTML = '新增飯店';
@@ -610,24 +609,49 @@ const UI = {
 
         try {
             const res = await GitHubService.createPR(data, hotelIndex, originalName, action);
-            feedback.innerHTML = `
-                <div class="text-emerald-600 font-bold flex items-center gap-1">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-                    提交成功！已建立 <a href="${res.data.html_url}" target="_blank" class="text-blue-600 underline">PR #${res.data.number}</a>
+
+            // 立即關閉 Modal
+            this.elements.editModal.classList.add('hidden');
+
+            // 彈出酷酷的 Toast
+            this.showToast(`
+                <div class="text-emerald-600 font-bold flex items-center gap-2 mb-1">
+                    <div class="bg-emerald-100 p-1 rounded-full">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                    </div>
+                    提交成功！已建立 PR #${res.data.number}
                 </div>
-                <div class="text-slate-500 text-xs mt-1">變更請求已送出，請等待管理員審核並合併後，最新的飯店資訊將會自動更新。</div>
-            `;
-            setTimeout(() => this.elements.editModal.classList.add('hidden'), 2000);
+                <div class="text-slate-600 text-xs leading-relaxed">您的建議已送出，變更將在管理員審核並合併後顯示。<br><a href="${res.data.html_url}" target="_blank" class="text-blue-600 font-bold underline mt-1 inline-block">點此查看 PR 進度</a></div>
+            `);
+
         } catch (err) {
             console.error(err);
-            feedback.textContent = `錯誤: ${err.message}`;
-        } finally {
+            this.showToast(`
+                <div class="text-rose-600 font-bold flex items-center gap-2 mb-1">
+                    <div class="bg-rose-100 p-1 rounded-full">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                    </div>
+                    發生錯誤
+                </div>
+                <div class="text-slate-600 text-xs">${err.message}</div>
+            `);
             saveBtn.disabled = false;
             deleteBtn.disabled = false;
+        } finally {
             btnText.textContent = originalBtnText;
             btnText.classList.remove('hidden');
             spinner.classList.add('hidden');
         }
+    },
+
+    showToast(html, duration = 7000) {
+        this.elements.toastContent.innerHTML = html;
+        this.elements.toast.classList.add('show');
+
+        if (this._toastTimer) clearTimeout(this._toastTimer);
+        this._toastTimer = setTimeout(() => {
+            this.elements.toast.classList.remove('show');
+        }, duration);
     },
 
     renderDebugList() {
