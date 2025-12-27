@@ -199,8 +199,10 @@ function renderHotels() {
     } else {
         noResults.classList.add('hidden');
         currentFilteredHotels.forEach(h => {
+            const isEditable = !!Cookies.get(TOKEN_COOKIE);
             const card = document.createElement('div');
-            card.className = 'hotel-card bg-white rounded-2xl overflow-hidden shadow-sm border border-slate-100 flex flex-col';
+            card.className = `hotel-card bg-white rounded-2xl overflow-hidden shadow-sm border border-slate-100 flex flex-col ${isEditable ? 'cursor-pointer hover:border-blue-200 transition-all' : ''}`;
+            if (isEditable) card.dataset.hotelName = h.name;
 
             const mapUrl = `https://www.google.com/maps/search/${encodeURIComponent(h.name + ' Singapore')}`;
 
@@ -290,21 +292,23 @@ function renderHotels() {
                         </div>
                     </div>
                 </div>
-                <div class="px-5 py-4 bg-slate-50 border-t border-slate-100 flex justify-between items-center gap-3">
-                    <div class="flex items-center gap-4">
-                        <a href="${mapUrl}" target="_blank" class="text-blue-600 font-semibold text-sm hover:underline flex items-center whitespace-nowrap">
+                <div class="px-5 py-4 bg-slate-50 border-t border-slate-100 flex flex-col gap-2">
+                    <div class="flex justify-between items-center">
+                        <a href="${mapUrl}" target="_blank" 
+                           class="text-blue-600 font-semibold text-sm hover:underline flex items-center whitespace-nowrap"
+                           onclick="event.stopPropagation()">
                             查看地圖
                             <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
                             </svg>
                         </a>
-                        <button data-hotel-name="${h.name}" class="edit-btn hidden bg-slate-200 text-slate-700 text-xs font-bold px-3 py-1 rounded-md hover:bg-slate-300">
-                            編輯
-                        </button>
+                        ${isEditable ? '<span class="text-[10px] bg-blue-50 text-blue-600 px-2 py-0.5 rounded font-bold">點擊卡片以編輯</span>' : ''}
                     </div>
-                    <div class="text-xs text-slate-500 italic leading-relaxed text-right">
-                        ${h.note || ''}
-                    </div>
+                    ${h.note ? `
+                        <div class="text-xs text-slate-500 italic leading-relaxed">
+                            ${h.note}
+                        </div>
+                    ` : ''}
                 </div>
             `;
             grid.appendChild(card);
@@ -522,7 +526,6 @@ const patModal = document.getElementById('pat-modal');
 
 async function updateLoginState() {
     const token = Cookies.get(TOKEN_COOKIE);
-    const editButtons = document.querySelectorAll('.edit-btn');
 
     if (token) {
         const octokit = new Octokit({ auth: token });
@@ -536,27 +539,24 @@ async function updateLoginState() {
             userInfo.classList.remove('hidden');
             userInfo.classList.add('flex');
 
-            editButtons.forEach(btn => btn.classList.remove('hidden'));
-
         } catch (error) {
             console.error("Error fetching user from GitHub", error);
             if (error.status === 401) {
                 alert('您的 GitHub Token 已失效或過期，請重新登入。');
                 Cookies.remove(TOKEN_COOKIE);
-                updateLoginState();
             } else if (error.status === 403) {
-                // 有可能是 Token 權限不足，但在這步通常是 API rate limit
                 console.warn('GitHub API 存取受限。');
             } else {
-                // 其他錯誤暫不干擾使用者
                 console.warn('無法連線至 GitHub 驗證身份。');
             }
         }
     } else {
         loginBtn.classList.remove('hidden');
         userInfo.classList.add('hidden');
-        editButtons.forEach(btn => btn.classList.add('hidden'));
     }
+
+    // 重新渲染飯店以更新卡片的編輯狀態 (是否可點擊)
+    renderHotels();
 }
 
 const editModal = document.getElementById('edit-modal');
@@ -638,9 +638,9 @@ document.getElementById('save-pat-btn').addEventListener('click', () => {
 });
 
 grid.addEventListener('click', (e) => {
-    if (e.target && e.target.classList.contains('edit-btn')) {
-        const hotelName = e.target.dataset.hotelName;
-        openEditModal(hotelName);
+    const card = e.target.closest('.hotel-card');
+    if (card && card.dataset.hotelName) {
+        openEditModal(card.dataset.hotelName);
     }
 });
 
