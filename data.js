@@ -77,7 +77,9 @@ export const hotels = [
         "lat": 1.3159092188196442,
         "lon": 103.8977450655825,
         "isRedLightDistrict": true,
-        "isPoorSoundproofing": true
+        "isPoorSoundproofing": true,
+        "isSafeLocation": false,
+        "isSoundproof": false
     },
     {
         "name": "Strand Hotel Singapore",
