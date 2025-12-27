@@ -16,6 +16,11 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 
     <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- GitHub & Cookie Libraries -->
+    <script src="https://cdn.jsdelivr.net/npm/js-cookie@3.0.5/dist/js.cookie.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/octokit@3.1.2/dist/octokit-core.min.js"></script>
+
     <link rel="stylesheet" href="style.css">
 </head>
 
@@ -35,9 +40,26 @@
     <!-- 主介面容器 -->
     <div id="mainContent" class="p-4 md:p-8">
         <div class="max-w-6xl mx-auto">
-            <header class="mb-8 text-center">
+            <header class="mb-8 text-center relative">
                 <h1 class="text-3xl font-bold text-slate-800 mb-2">新加坡飯店挑選助手</h1>
                 <p class="text-slate-600">根據您的需求篩選最合適的住宿選擇</p>
+
+                <!-- GitHub Login UI -->
+                <div id="github-auth-container" class="absolute top-0 right-0 flex items-center gap-3">
+                    <div id="user-info" class="hidden items-center gap-2">
+                        <img id="user-avatar" class="w-8 h-8 rounded-full" src="" alt="User Avatar">
+                        <span id="user-login" class="font-semibold text-slate-700"></span>
+                        <button id="logout-btn" class="text-sm text-slate-500 hover:text-blue-600 underline">登出</button>
+                    </div>
+                    <button id="login-btn"
+                        class="bg-slate-800 text-white px-4 py-2 rounded-lg font-semibold hover:bg-slate-900 transition-colors">
+                        <svg class="w-5 h-5 inline-block mr-2" fill="currentColor" viewBox="0 0 24 24">
+                            <path
+                                d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z" />
+                        </svg>
+                        以 GitHub 編輯
+                    </button>
+                </div>
             </header>
 
             <div class="bg-white p-6 rounded-2xl shadow-sm mb-8">
@@ -181,6 +203,85 @@
     <!-- Leaflet JS -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="script.js" type="module"></script>
+
+    <!-- PAT Input Modal -->
+    <div id="pat-modal" class="hidden fixed inset-0 z-[3000] bg-slate-900/60 flex items-center justify-center">
+        <div class="bg-white rounded-2xl shadow-xl p-8 w-full max-w-md m-4">
+            <h2 class="text-2xl font-bold text-slate-800 mb-4">請提供您的 GitHub Personal Access Token</h2>
+            <p class="text-slate-600 mb-6 text-sm">
+                為了提交您的變更，我們需要一個具有 <code
+                    class="bg-slate-100 text-slate-800 rounded px-1 py-0.5 font-mono text-xs">public_repo</code>
+                權限的 Personal Access Token (PAT)。此權杖將 <strong class="font-bold">僅儲存於您的瀏覽器中</strong>，並只用於此次操作。
+                <a href="https://github.com/settings/tokens?type=beta" target="_blank"
+                    class="text-blue-600 hover:underline">在此處創建新的權杖</a>。
+            </p>
+            <input type="password" id="pat-input" placeholder="貼上您的 token (ghp_...)"
+                class="w-full border-slate-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500">
+            <div class="flex justify-end gap-4 mt-6">
+                <button id="cancel-pat-btn"
+                    class="text-slate-600 font-semibold px-4 py-2 rounded-lg hover:bg-slate-100">取消</button>
+                <button id="save-pat-btn"
+                    class="bg-blue-600 text-white font-bold px-6 py-2 rounded-lg hover:bg-blue-700">儲存權杖</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Hotel Modal -->
+    <div id="edit-modal" class="hidden fixed inset-0 z-[3000] bg-slate-900/60 flex items-center justify-center">
+        <div class="bg-white rounded-2xl shadow-xl p-8 w-full max-w-2xl m-4">
+            <form id="edit-form">
+                <h2 class="text-2xl font-bold text-slate-800 mb-6">編輯 <span id="edit-hotel-name"
+                        class="text-blue-600"></span></h2>
+                <input type="hidden" id="edit-original-name">
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label for="edit-price" class="block text-sm font-bold text-slate-700 mb-2">價格 ($)</label>
+                        <input type="number" id="edit-price" name="price"
+                            class="w-full border-slate-300 rounded-lg shadow-sm">
+                    </div>
+                    <div>
+                        <label for="edit-size" class="block text-sm font-bold text-slate-700 mb-2">空間 (m²)</label>
+                        <input type="number" id="edit-size" name="size"
+                            class="w-full border-slate-300 rounded-lg shadow-sm">
+                    </div>
+                </div>
+
+                <div class="mt-6">
+                    <label for="edit-note" class="block text-sm font-bold text-slate-700 mb-2">備註</label>
+                    <textarea id="edit-note" name="note" rows="3"
+                        class="w-full border-slate-300 rounded-lg shadow-sm"></textarea>
+                </div>
+
+                <div class="mt-6">
+                    <label class="block text-sm font-bold text-slate-700 mb-4">標籤</label>
+                    <div id="edit-tags-container" class="grid grid-cols-2 md:grid-cols-3 gap-4">
+                        <!-- Checkboxes will be dynamically inserted here -->
+                    </div>
+                </div>
+
+                <div class="mt-8 pt-6 border-t border-slate-200 flex justify-between items-center">
+                    <div id="pr-feedback" class="text-sm"></div>
+                    <div class="flex gap-4">
+                        <button type="button" id="cancel-edit-btn"
+                            class="text-slate-600 font-semibold px-4 py-2 rounded-lg hover:bg-slate-100">取消</button>
+                        <button type="submit" id="save-edit-btn"
+                            class="bg-blue-600 text-white font-bold px-6 py-2 rounded-lg hover:bg-blue-700 flex items-center">
+                            <span id="save-btn-text">儲存並建立 PR</span>
+                            <svg id="loading-spinner" class="animate-spin -ml-1 mr-3 h-5 w-5 text-white hidden"
+                                xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor"
+                                    stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor"
+                                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                                </path>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
 </body>
 
 </html>

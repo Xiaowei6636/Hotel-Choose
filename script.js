@@ -289,17 +289,21 @@ function renderHotels() {
                         </div>
                     </div>
                 </div>
-                <div class="px-5 py-4 bg-slate-50 border-t border-slate-100 flex justify-between items-start gap-3">
-                    <div class="text-xs text-slate-500 italic leading-relaxed">
+                <div class="px-5 py-4 bg-slate-50 border-t border-slate-100 flex justify-between items-center gap-3">
+                    <div class="flex items-center gap-4">
+                        <a href="${mapUrl}" target="_blank" class="text-blue-600 font-semibold text-sm hover:underline flex items-center whitespace-nowrap">
+                            查看地圖
+                            <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
+                            </svg>
+                        </a>
+                        <button data-hotel-name="${h.name}" class="edit-btn hidden bg-slate-200 text-slate-700 text-xs font-bold px-3 py-1 rounded-md hover:bg-slate-300">
+                            編輯
+                        </button>
+                    </div>
+                    <div class="text-xs text-slate-500 italic leading-relaxed text-right">
                         ${h.note || ''}
                     </div>
-                    
-                    <a href="${mapUrl}" target="_blank" class="text-blue-600 font-semibold text-sm hover:underline flex items-center whitespace-nowrap flex-shrink-0 pt-0.5">
-                        查看地圖
-                        <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
-                        </svg>
-                    </a>
                 </div>
             `;
             grid.appendChild(card);
@@ -504,6 +508,250 @@ clearCacheBtn.addEventListener('click', () => {
     }
 });
 
+// --- GitHub Auth & UI Logic ---
+
+const TOKEN_COOKIE = 'github_pat';
+
+const loginBtn = document.getElementById('login-btn');
+const logoutBtn = document.getElementById('logout-btn');
+const userInfo = document.getElementById('user-info');
+const userAvatar = document.getElementById('user-avatar');
+const userLogin = document.getElementById('user-login');
+const patModal = document.getElementById('pat-modal');
+
+async function updateLoginState() {
+    const token = Cookies.get(TOKEN_COOKIE);
+    const editButtons = document.querySelectorAll('.edit-btn');
+
+    if (token) {
+        const { Octokit } = window.octokit;
+        const octokit = new Octokit({ auth: token });
+        try {
+            const { data: { login, avatar_url } } = await octokit.request('GET /user');
+
+            userAvatar.src = avatar_url;
+            userLogin.textContent = login;
+
+            loginBtn.classList.add('hidden');
+            userInfo.classList.remove('hidden');
+            userInfo.classList.add('flex');
+
+            editButtons.forEach(btn => btn.classList.remove('hidden'));
+
+        } catch (error) {
+            console.error("Error fetching user from GitHub", error);
+            // Token might be invalid, so log out
+            Cookies.remove(TOKEN_COOKIE);
+            updateLoginState();
+        }
+    } else {
+        loginBtn.classList.remove('hidden');
+        userInfo.classList.add('hidden');
+        editButtons.forEach(btn => btn.classList.add('hidden'));
+    }
+}
+
+const editModal = document.getElementById('edit-modal');
+const editTagsContainer = document.getElementById('edit-tags-container');
+
+const allTags = [
+    { key: 'cancelable', label: '可免費取消', type: 'positive' },
+    { key: 'isRedLightDistrict', label: '靠近紅燈區', type: 'negative' },
+    { key: 'isPoorSoundproofing', label: '隔音差', type: 'negative' },
+    { key: 'hasSofaBed', label: '沙發床', type: 'negative' },
+    { key: 'hasFewOutlets', label: '插座少', type: 'negative' },
+    { key: 'hasWiFi', label: 'WiFi', type: 'amenity' },
+    { key: 'hasPool', label: '游泳池', type: 'amenity' },
+    { key: 'hasWashingMachine', label: '洗衣機', type: 'amenity' },
+];
+
+function openEditModal(hotelName) {
+    const hotel = hotels.find(h => h.name === hotelName);
+    if (!hotel) return;
+
+    document.getElementById('edit-hotel-name').textContent = hotel.name;
+    document.getElementById('edit-original-name').value = hotel.name;
+    document.getElementById('edit-price').value = hotel.price;
+    document.getElementById('edit-size').value = hotel.size;
+    document.getElementById('edit-note').value = hotel.note || '';
+
+    editTagsContainer.innerHTML = '';
+    allTags.forEach(tag => {
+        const isChecked = hotel[tag.key] === true;
+        const checkboxId = `edit-tag-${tag.key}`;
+        const label = document.createElement('label');
+        label.htmlFor = checkboxId;
+        label.className = 'flex items-center p-2 bg-slate-50 rounded-lg border border-transparent hover:border-slate-200 transition-all cursor-pointer';
+        label.innerHTML = `
+            <input type="checkbox" id="${checkboxId}" name="${tag.key}" ${isChecked ? 'checked' : ''}
+                   class="w-4 h-4 text-blue-600 border-slate-300 rounded focus:ring-blue-500">
+            <span class="ml-2 text-xs md:text-sm text-slate-600">${tag.label}</span>
+        `;
+        editTagsContainer.appendChild(label);
+    });
+
+    editModal.classList.remove('hidden');
+}
+
+
 // 初始啟動
 renderHotels();
 geocodeAllHotels(); // 背景開始獲取座標
+
+updateLoginState();
+
+// --- Event Listeners ---
+
+loginBtn.addEventListener('click', () => {
+    patModal.classList.remove('hidden');
+});
+
+logoutBtn.addEventListener('click', () => {
+    Cookies.remove(TOKEN_COOKIE);
+    updateLoginState();
+});
+
+document.getElementById('cancel-pat-btn').addEventListener('click', () => {
+    patModal.classList.add('hidden');
+});
+
+document.getElementById('save-pat-btn').addEventListener('click', () => {
+    const pat = document.getElementById('pat-input').value;
+    if (pat) {
+        Cookies.set(TOKEN_COOKIE, pat, { expires: 30 }); // Save for 30 days
+        patModal.classList.add('hidden');
+        document.getElementById('pat-input').value = '';
+        updateLoginState();
+    }
+});
+
+grid.addEventListener('click', (e) => {
+    if (e.target && e.target.classList.contains('edit-btn')) {
+        const hotelName = e.target.dataset.hotelName;
+        openEditModal(hotelName);
+    }
+});
+
+document.getElementById('cancel-edit-btn').addEventListener('click', () => {
+    editModal.classList.add('hidden');
+});
+
+async function submitChanges(event) {
+    event.preventDefault();
+
+    const saveBtn = document.getElementById('save-edit-btn');
+    const btnText = document.getElementById('save-btn-text');
+    const spinner = document.getElementById('loading-spinner');
+    const feedback = document.getElementById('pr-feedback');
+
+    btnText.classList.add('hidden');
+    spinner.classList.remove('hidden');
+    saveBtn.disabled = true;
+    feedback.textContent = '';
+
+    const token = Cookies.get(TOKEN_COOKIE);
+    if (!token) {
+        feedback.textContent = '錯誤：GitHub PAT 遺失。';
+        return;
+    }
+
+    const { Octokit } = window.octokit;
+    const octokit = new Octokit({ auth: token });
+
+    const originalName = document.getElementById('edit-original-name').value;
+    const updatedHotel = {
+        name: originalName, // Name is the key, should not be changed in this UI
+        price: parseInt(document.getElementById('edit-price').value),
+        size: parseInt(document.getElementById('edit-size').value),
+        note: document.getElementById('edit-note').value,
+    };
+
+    allTags.forEach(tag => {
+        const checkbox = document.getElementById(`edit-tag-${tag.key}`);
+        if (checkbox) {
+             updatedHotel[tag.key] = checkbox.checked;
+        }
+    });
+
+    try {
+        const owner = ''; // IMPORTANT: Replace with the repo owner's username
+        const repo = ''; // IMPORTANT: Replace with the repo name
+        const path = 'data.js';
+
+        // 1. Get the latest commit SHA of the main branch and the file's current SHA
+        const { data: { object: { sha: latestSha } } } = await octokit.request('GET /repos/{owner}/{repo}/git/ref/{ref}', {
+            owner,
+            repo,
+            ref: 'heads/main' // or your default branch
+        });
+
+        // 2. Get the current content of data.js
+        const { data: { content: currentContentBase64, sha: fileSha } } = await octokit.request('GET /repos/{owner}/{repo}/contents/{path}', {
+            owner,
+            repo,
+            path,
+            ref: 'main' // Fetch from the base branch
+        });
+
+        const currentContent = atob(currentContentBase64);
+        const hotelsArrayString = currentContent.substring(currentContent.indexOf('['));
+
+        // Using a safer method to convert string to array of objects
+        const tempHotels = new Function('return ' + hotelsArrayString)();
+
+        const hotelIndex = tempHotels.findIndex(h => h.name === originalName);
+        if (hotelIndex === -1) throw new Error("Hotel not found in data.js");
+
+        // Merge existing data with updated data
+        tempHotels[hotelIndex] = { ...tempHotels[hotelIndex], ...updatedHotel };
+
+        // Convert back to a nicely formatted string
+        const newHotelsArrayString = JSON.stringify(tempHotels, null, 4);
+        const newContent = `export const hotels = ${newHotelsArrayString};`;
+
+        // 3. Create a new branch
+        const branchName = `update-${originalName.toLowerCase().replace(/\s+/g, '-')}-${Date.now()}`;
+        await octokit.request('POST /repos/{owner}/{repo}/git/refs', {
+            owner,
+            repo,
+            ref: `refs/heads/${branchName}`,
+            sha: latestSha
+        });
+
+        // 4. Create a new commit with the updated file
+        await octokit.request('PUT /repos/{owner}/{repo}/contents/{path}', {
+            owner,
+            repo,
+            path,
+            message: `Update ${originalName} data`,
+            content: btoa(newContent),
+            sha: (await octokit.request('GET /repos/{owner}/{repo}/contents/{path}?ref=${branchName}', { owner, repo, path, branch: branchName })).data.sha,
+            branch: branchName
+        });
+
+        // 5. Create a Pull Request
+        const { data: pullRequest } = await octokit.request('POST /repos/{owner}/{repo}/pulls', {
+            owner,
+            repo,
+            title: `Update data for ${originalName}`,
+            head: branchName,
+            base: 'main', // or your default branch
+            body: `This PR was automatically generated to update the data for ${originalName}.`
+        });
+
+        feedback.innerHTML = `成功！已建立 <a href="${pullRequest.html_url}" target="_blank" class="text-blue-600 underline">Pull Request #${pullRequest.number}</a>。`;
+        setTimeout(() => {
+            editModal.classList.add('hidden');
+        }, 5000);
+
+
+    } catch (error) {
+        console.error("GitHub API error:", error);
+        feedback.textContent = `Error: ${error.message}`;
+        btnText.classList.remove('hidden');
+        spinner.classList.add('hidden');
+        saveBtn.disabled = false;
+    }
+}
+
+document.getElementById('edit-form').addEventListener('submit', submitChanges);
