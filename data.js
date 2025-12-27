@@ -24,7 +24,8 @@ export const hotels = [
         "size": 17,
         "note": "",
         "hasWiFi": true,
-        "isRedLightDistrict": false
+        "isRedLightDistrict": false,
+        "isSafeLocation": true
     },
     {
         "name": "Hotel Mi Rochor",
