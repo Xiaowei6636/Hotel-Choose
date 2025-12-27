@@ -540,10 +540,17 @@ async function updateLoginState() {
 
         } catch (error) {
             console.error("Error fetching user from GitHub", error);
-            // Token might be invalid, so log out
-            alert('GitHub token a-t-il expiré. Veuillez vérifier votre jeton et réessayer.');
-            Cookies.remove(TOKEN_COOKIE);
-            updateLoginState();
+            if (error.status === 401) {
+                alert('您的 GitHub Token 已失效或過期，請重新登入。');
+                Cookies.remove(TOKEN_COOKIE);
+                updateLoginState();
+            } else if (error.status === 403) {
+                // 有可能是 Token 權限不足，但在這步通常是 API rate limit
+                console.warn('GitHub API 存取受限。');
+            } else {
+                // 其他錯誤暫不干擾使用者
+                console.warn('無法連線至 GitHub 驗證身份。');
+            }
         }
     } else {
         loginBtn.classList.remove('hidden');
