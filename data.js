@@ -129,17 +129,18 @@ export const hotels = [
 
 /**
  * --- 填寫說明 ---
- * 若要標註特定資訊，請在該飯店物件中新增對應屬性並設為 true。
+ * 所有屬性皆採「正向邏輯」，即 true 代表正面/良好的情況。
  * * 屬性名稱對照表：
- * - isRedLightDistrict: true   (靠近紅燈區)
- * - isPoorSoundproofing: true  (隔音較差)
- * - hasSofaBed: true           (有沙發床)
- * - hasFewOutlets: true        (插座少)
+ * - isSafeLocation: true       (環境安全，不靠近紅燈區)
+ * - isSoundproof: true         (隔音良好)
+ * - hasRealBed: true           (非沙發床，有正式床鋪)
+ * - hasPlentyOutlets: true     (插座充足)
  * - hasWiFi: true              (包含WiFi)
  * - hasPool: true              (包含游泳池)
  * - hasWashingMachine: true    (包含洗衣機)
+ * - cancelable: true           (可免費取消)
  * - lat: 1.2345, lon: 103.123  (手動指定座標，若未填寫則自動查詢)
  * * 範例：
- * { name: "範例飯店", price: 5000, ..., lat: 1.30, lon: 103.85 }
+ * { name: "範例飯店", price: 5000, isSafeLocation: true, ... }
  * * 若未填寫，網頁卡片將統一顯示「未提供資訊」。
  */
