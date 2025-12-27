@@ -541,6 +541,7 @@ async function updateLoginState() {
         } catch (error) {
             console.error("Error fetching user from GitHub", error);
             // Token might be invalid, so log out
+            alert('GitHub token a-t-il expiré. Veuillez vérifier votre jeton et réessayer.');
             Cookies.remove(TOKEN_COOKIE);
             updateLoginState();
         }
