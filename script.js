@@ -703,7 +703,7 @@ async function submitChanges(event) {
         const trailingContent = arrayEnd !== -1 ? currentContent.substring(arrayEnd + 2) : '';
 
         // 擷取陣列字串
-        const hotelsArrayString = currentContent.substring(arrayStart, arrayLastIndex !== -1 ? arrayLastIndex + 1 : undefined);
+        const hotelsArrayString = currentContent.substring(arrayStart, arrayEnd !== -1 ? arrayEnd + 1 : undefined);
 
         // Using a safer method to convert string to array of objects
         const tempHotels = new Function('return ' + hotelsArrayString)();
