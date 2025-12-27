@@ -710,7 +710,7 @@ async function submitChanges(event) {
         const arrayStart = currentContent.indexOf('[');
         const arrayEnd = currentContent.lastIndexOf('];');
 
-        // 擷取陣列後的內容（例如註解）
+        // 擷取陣列後的內容（絕對保留原有狀態，不論是否被手動編輯過）
         const trailingContent = arrayEnd !== -1 ? currentContent.substring(arrayEnd + 2) : '';
 
         // 擷取陣列字串
