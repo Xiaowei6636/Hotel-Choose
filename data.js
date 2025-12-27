@@ -55,7 +55,8 @@ export const hotels = [
         "size": 32,
         "note": "機場接駁/酒吧/部分有廚房",
         "hasWiFi": true,
-        "isRedLightDistrict": false
+        "isRedLightDistrict": false,
+        "isSafeLocation": true
     },
     {
         "name": "V Hotel Lavender",
