@@ -123,6 +123,12 @@ export const hotels = [
         "isRedLightDistrict": false,
         "isSafeLocation": true,
         "hasPlentyOutlets": true
+    },
+    {
+        "name": "Test",
+        "price": null,
+        "size": 20,
+        "note": ""
     }
 ];
 
