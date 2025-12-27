@@ -41,12 +41,14 @@
 ## 4. GitHub 編輯機制 (PR Workflow)
 
 編輯功能的運作流程如下：
-1.  使用者點擊飯店卡片（需先登入 GitHub PAT）。
-2.  系統讀取 `script.js` 中的 `CONFIG.ALL_TAGS` 動態生成編輯選單。
-3.  按下「儲存」後，`GitHubService` 會：
+1.  使用者登入 GitHub PAT。
+2.  **編輯飯店**: 點擊飯店卡片，修改資料後按儲存。
+3.  **新增飯店**: 點擊頁首的「新增飯店」按鈕。
+4.  **刪除飯店**: 點擊飯店卡片後，在彈窗左下角按「刪除飯店」。
+5.  按下執行後，`GitHubService` 會：
     *   讀取目前 `data.js` 的內容。
-    *   將內容轉換為物件，修改對應索引的資料。
-    *   將物件重新序列化為 `data.js` 的程式碼格式。
+    *   透過 `new Function()` 解析內容，根據操作 (add/update/delete) 修改資料數組。
+    *   將更新後的資料重新串接回 `export const hotels = ...` 格式。
     *   建立新分支並推送變更。
     *   建立 Pull Request。
 

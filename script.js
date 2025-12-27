@@ -198,7 +198,7 @@ const GitHubService = {
         }
     },
 
-    async createPR(updatedHotel, hotelIndexInOriginal, originalName) {
+    async createPR(updatedHotel, hotelIndexInOriginal, originalName, action = 'update') {
         const octokit = this.getOctokit();
         if (!octokit) throw new Error("未登入 GitHub");
 
@@ -218,24 +218,46 @@ const GitHubService = {
 
         const tempHotels = new Function('return ' + hotelsArrayString)();
 
-        // 尋找飯店
-        let idx = hotelIndexInOriginal;
-        if (!tempHotels[idx] || tempHotels[idx].name !== originalName) {
-            idx = tempHotels.findIndex(h => h.name === originalName);
-        }
-        if (idx === -1) throw new Error("找不到該飯店資料");
+        // 2. 執行操作
+        let commitMessage = '';
+        let prTitle = '';
+        let prBody = '';
 
-        // 2. 更新資料
-        tempHotels[idx] = { ...tempHotels[idx], ...updatedHotel };
+        if (action === 'add') {
+            tempHotels.push(updatedHotel);
+            commitMessage = `Add new hotel: ${updatedHotel.name}`;
+            prTitle = `Add new hotel: ${updatedHotel.name}`;
+            prBody = `此 PR 由飯店挑選助手自動產生，新增飯店 ${updatedHotel.name} 的資料。`;
+        } else {
+            // 尋找飯店 (update 或 delete)
+            let idx = hotelIndexInOriginal;
+            if (idx === -1 || !tempHotels[idx] || tempHotels[idx].name !== originalName) {
+                idx = tempHotels.findIndex(h => h.name === originalName);
+            }
+            if (idx === -1) throw new Error("找不到該飯店資料");
+
+            if (action === 'delete') {
+                tempHotels.splice(idx, 1);
+                commitMessage = `Delete hotel: ${originalName}`;
+                prTitle = `Delete hotel: ${originalName}`;
+                prBody = `此 PR 由飯店挑選助手自動產生，刪除飯店 ${originalName} 的資料。`;
+            } else {
+                tempHotels[idx] = { ...tempHotels[idx], ...updatedHotel };
+                commitMessage = `Update ${originalName} data`;
+                prTitle = `Update data for ${originalName}`;
+                prBody = `此 PR 由飯店挑選助手自動產生，更新 ${originalName} 的資料。`;
+            }
+        }
+
         const newContent = `export const hotels = ${JSON.stringify(tempHotels, null, 4)};${trailingContent}`;
 
         // 3. 建立分支與提交
-        const branchName = `update-${originalName.toLowerCase().replace(/\s+/g, '-')}-${Date.now()}`;
+        const branchName = `${action}-${(updatedHotel?.name || originalName).toLowerCase().replace(/\s+/g, '-')}-${Date.now()}`;
         await octokit.request('POST /repos/{owner}/{repo}/git/refs', { owner, repo, ref: `refs/heads/${branchName}`, sha: latestSha });
 
         await octokit.request('PUT /repos/{owner}/{repo}/contents/{path}', {
             owner, repo, path,
-            message: `Update ${originalName} data`,
+            message: commitMessage,
             content: btoa(unescape(encodeURIComponent(newContent))),
             branch: branchName,
             sha: (await octokit.request('GET /repos/{owner}/{repo}/contents/{path}?ref={ref}', { owner, repo, path, ref: branchName })).data.sha
@@ -243,9 +265,9 @@ const GitHubService = {
 
         // 4. 建立 PR
         return await octokit.request('POST /repos/{owner}/{repo}/pulls', {
-            owner, repo, title: `Update data for ${originalName}`,
+            owner, repo, title: prTitle,
             head: branchName, base: 'main',
-            body: `此 PR 由飯店挑選助手自動產生，更新 ${originalName} 的資料。`
+            body: prBody
         });
     }
 };
@@ -273,6 +295,8 @@ const UI = {
         userInfo: document.getElementById('user-info'),
         userAvatar: document.getElementById('user-avatar'),
         userLogin: document.getElementById('user-login'),
+        addHotelBtn: document.getElementById('add-hotel-btn'),
+        deleteHotelBtn: document.getElementById('delete-hotel-btn'),
         patModal: document.getElementById('pat-modal'),
         editModal: document.getElementById('edit-modal'),
         editTagsContainer: document.getElementById('edit-tags-container')
@@ -328,10 +352,13 @@ const UI = {
         });
         document.getElementById('cancel-pat-btn').addEventListener('click', () => this.elements.patModal.classList.add('hidden'));
         document.getElementById('cancel-edit-btn').addEventListener('click', () => this.elements.editModal.classList.add('hidden'));
+        this.elements.addHotelBtn.addEventListener('click', () => this.openEditModal(-1));
+        this.elements.deleteHotelBtn.addEventListener('click', () => this.handleDelete());
+
         this.elements.grid.addEventListener('click', (e) => {
             const card = e.target.closest('.hotel-card');
             if (card && card.dataset.index !== undefined) {
-                Cookies.get(CONFIG.TOKEN_COOKIE) ? this.openEditModal(card.dataset.index) : this.elements.patModal.classList.remove('hidden');
+                Cookies.get(CONFIG.TOKEN_COOKIE) ? this.openEditModal(parseInt(card.dataset.index)) : this.elements.patModal.classList.remove('hidden');
             }
         });
         document.getElementById('edit-form').addEventListener('submit', (e) => this.handleEditSubmit(e));
@@ -469,15 +496,29 @@ const UI = {
     },
 
     openEditModal(idx) {
-        const h = hotels[idx];
+        const isAdd = idx === -1;
+        const h = isAdd ? { name: '', price: 5000, size: 20 } : hotels[idx];
         if (!h) return;
 
-        document.getElementById('edit-hotel-name').textContent = h.name;
+        const titleEl = document.getElementById('edit-modal-title');
+        if (isAdd) {
+            titleEl.innerHTML = '新增飯店';
+        } else {
+            titleEl.innerHTML = `編輯 <span class="text-blue-600">${h.name}</span>`;
+        }
+
         document.getElementById('edit-original-name').value = h.name;
         document.getElementById('edit-hotel-index').value = idx;
+        document.getElementById('edit-name').value = h.name;
         document.getElementById('edit-price').value = h.price;
         document.getElementById('edit-size').value = h.size;
         document.getElementById('edit-note').value = h.note || '';
+
+        // 顯示/隱藏刪除按鈕
+        this.elements.deleteHotelBtn.classList.toggle('hidden', isAdd);
+
+        // 更新按鈕文字
+        document.getElementById('save-btn-text').textContent = isAdd ? '新增並建立 PR' : '儲存並建立 PR';
 
         this.elements.editTagsContainer.innerHTML = '';
         CONFIG.ALL_TAGS.forEach(tag => {
@@ -486,7 +527,7 @@ const UI = {
             div.className = 'flex flex-col gap-1.5 p-3 bg-slate-50 rounded-xl border border-slate-100';
             div.innerHTML = `
                 <label class="text-[11px] font-bold text-slate-500 uppercase tracking-wider">${tag.label}</label>
-                <select id="edit-tag-${tag.key}" name="${tag.key}" class="bg-white border-slate-200 rounded-lg text-sm p-1.5 outline-none">
+                <select id="edit-tag-${tag.key}" name="${tag.key}" class="bg-white/50 border-slate-200 rounded-lg text-sm p-1.5 outline-none focus:bg-white transition-colors">
                     <option value="undefined" ${val === undefined ? 'selected' : ''}>❓ 未提供</option>
                     <option value="true" ${val === true ? 'selected' : ''}>✅ 是 / 有</option>
                     <option value="false" ${val === false ? 'selected' : ''}>❌ 否 / 無</option>
@@ -500,18 +541,36 @@ const UI = {
 
     async handleEditSubmit(e) {
         e.preventDefault();
+        const hotelIndex = parseInt(document.getElementById('edit-hotel-index').value);
+        const action = hotelIndex === -1 ? 'add' : 'update';
+
+        await this.submitPR(action);
+    },
+
+    async handleDelete() {
+        if (!confirm('確定要刪除這間飯店嗎？這將會建立一個刪除請求。')) return;
+        await this.submitPR('delete');
+    },
+
+    async submitPR(action) {
         const saveBtn = document.getElementById('save-edit-btn');
+        const deleteBtn = document.getElementById('delete-hotel-btn');
         const feedback = document.getElementById('pr-feedback');
+        const btnText = document.getElementById('save-btn-text');
+        const spinner = document.getElementById('loading-spinner');
 
         saveBtn.disabled = true;
-        document.getElementById('save-btn-text').classList.add('hidden');
-        document.getElementById('loading-spinner').classList.remove('hidden');
+        deleteBtn.disabled = true;
+        const originalBtnText = btnText.textContent;
+        btnText.classList.add('hidden');
+        spinner.classList.remove('hidden');
         feedback.textContent = '';
 
         const originalName = document.getElementById('edit-original-name').value;
         const hotelIndex = parseInt(document.getElementById('edit-hotel-index').value);
+
         const data = {
-            name: originalName,
+            name: document.getElementById('edit-name').value,
             price: parseInt(document.getElementById('edit-price').value),
             size: parseInt(document.getElementById('edit-size').value),
             note: document.getElementById('edit-note').value,
@@ -523,16 +582,18 @@ const UI = {
         });
 
         try {
-            const res = await GitHubService.createPR(data, hotelIndex, originalName);
+            const res = await GitHubService.createPR(data, hotelIndex, originalName, action);
             feedback.innerHTML = `成功！已建立 <a href="${res.data.html_url}" target="_blank" class="text-blue-600 underline">PR #${res.data.number}</a>`;
             setTimeout(() => this.elements.editModal.classList.add('hidden'), 5000);
         } catch (err) {
             console.error(err);
             feedback.textContent = `錯誤: ${err.message}`;
             saveBtn.disabled = false;
+            deleteBtn.disabled = false;
         } finally {
-            document.getElementById('save-btn-text').classList.remove('hidden');
-            document.getElementById('loading-spinner').classList.add('hidden');
+            btnText.textContent = originalBtnText;
+            btnText.classList.remove('hidden');
+            spinner.classList.add('hidden');
         }
     },
 

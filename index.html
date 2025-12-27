@@ -54,6 +54,9 @@
                             alt="User Avatar">
                         <span id="user-login" class="text-xs font-bold text-slate-700"></span>
                         <div class="w-px h-3 bg-slate-300 mx-1"></div>
+                        <button id="add-hotel-btn"
+                            class="text-xs text-blue-600 hover:text-blue-700 font-bold transition-colors">新增飯店</button>
+                        <div class="w-px h-3 bg-slate-300 mx-1"></div>
                         <button id="logout-btn"
                             class="text-xs text-slate-500 hover:text-red-600 font-medium transition-colors">登出</button>
                     </div>
@@ -239,7 +242,7 @@
         <div class="bg-white rounded-2xl shadow-xl w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden">
             <!-- Header (Fixed) -->
             <div class="px-8 py-5 border-b border-slate-100 bg-white">
-                <h2 class="text-2xl font-bold text-slate-800">編輯 <span id="edit-hotel-name"
+                <h2 id="edit-modal-title" class="text-2xl font-bold text-slate-800">編輯 <span id="edit-hotel-name"
                         class="text-blue-600"></span></h2>
             </div>
 
@@ -248,24 +251,31 @@
                 <div class="p-8 overflow-y-auto space-y-8 flex-grow custom-scrollbar">
                     <input type="hidden" id="edit-original-name">
                     <input type="hidden" id="edit-hotel-index">
+                    <div class="grid grid-cols-1 gap-6">
+                        <div>
+                            <label for="edit-name" class="block text-sm font-bold text-slate-700 mb-2">飯店名稱</label>
+                            <input type="text" id="edit-name" name="name" required
+                                class="w-full bg-slate-50 border-slate-200 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 transition-colors">
+                        </div>
+                    </div>
 
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
                             <label for="edit-price" class="block text-sm font-bold text-slate-700 mb-2">價格 ($)</label>
                             <input type="number" id="edit-price" name="price"
-                                class="w-full border-slate-200 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                                class="w-full bg-slate-50 border-slate-200 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 transition-colors">
                         </div>
                         <div>
                             <label for="edit-size" class="block text-sm font-bold text-slate-700 mb-2">空間 (m²)</label>
                             <input type="number" id="edit-size" name="size"
-                                class="w-full border-slate-200 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                                class="w-full bg-slate-50 border-slate-200 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 transition-colors">
                         </div>
                     </div>
 
                     <div>
                         <label for="edit-note" class="block text-sm font-bold text-slate-700 mb-2">備註</label>
                         <textarea id="edit-note" name="note" rows="3"
-                            class="w-full border-slate-200 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500"></textarea>
+                            class="w-full bg-slate-50 border-slate-200 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 transition-colors"></textarea>
                     </div>
 
                     <div>
@@ -282,6 +292,8 @@
                     class="px-8 py-5 bg-slate-50 border-t border-slate-200 flex flex-col md:flex-row justify-between items-center gap-4">
                     <div id="pr-feedback" class="text-sm font-medium"></div>
                     <div class="flex gap-4 w-full md:w-auto">
+                        <button type="button" id="delete-hotel-btn"
+                            class="hidden text-red-600 font-semibold px-6 py-2.5 rounded-lg hover:bg-red-50 transition-colors mr-auto">刪除飯店</button>
                         <button type="button" id="cancel-edit-btn"
                             class="flex-1 md:flex-none text-slate-600 font-semibold px-6 py-2.5 rounded-lg hover:bg-slate-200 transition-colors">取消</button>
                         <button type="submit" id="save-edit-btn"
