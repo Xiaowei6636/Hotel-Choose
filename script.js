@@ -685,9 +685,9 @@ const UI = {
                 </div>
                 <div class="text-slate-600 text-xs">${err.message}</div>
             `);
+        } finally {
             saveBtn.disabled = false;
             deleteBtn.disabled = false;
-        } finally {
             btnText.textContent = originalBtnText;
             btnText.classList.remove('hidden');
             spinner.classList.add('hidden');
