@@ -143,7 +143,14 @@ export const hotels = [
         "price": 5000,
         "size": 10000000000,
         "note": "",
-        "isSoundproof": true
+        "isSoundproof": true,
+        "cancelable": true,
+        "isSafeLocation": true,
+        "hasRealBed": true,
+        "hasPlentyOutlets": true,
+        "hasWiFi": true,
+        "hasPool": true,
+        "hasWashingMachine": true
     }
 ];
 
