@@ -580,6 +580,10 @@ const UI = {
         document.getElementById('edit-size').value = h.size;
         document.getElementById('edit-note').value = h.note || '';
 
+        // Populate coordinate fields
+        document.getElementById('edit-lat').value = h.lat || '';
+        document.getElementById('edit-lon').value = h.lon || '';
+
         // 顯示/隱藏刪除按鈕
         this.elements.deleteHotelBtn.classList.toggle('hidden', isAdd);
 
@@ -646,6 +650,17 @@ const UI = {
             const val = document.getElementById(`edit-tag-${tag.key}`).value;
             data[tag.key] = val === 'true' ? true : (val === 'false' ? false : undefined);
         });
+
+        const lat = parseFloat(document.getElementById('edit-lat').value);
+        const lon = parseFloat(document.getElementById('edit-lon').value);
+        if (!isNaN(lat) && !isNaN(lon) && lat !== 0 && lon !== 0) {
+            data.lat = lat;
+            data.lon = lon;
+        } else {
+            // If fields are empty or zero, ensure they are not added to the PR data
+            delete data.lat;
+            delete data.lon;
+        }
 
         try {
             const res = await GitHubService.createPR(data, hotelIndex, originalName, action);
