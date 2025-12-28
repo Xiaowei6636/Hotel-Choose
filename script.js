@@ -333,7 +333,21 @@ const UI = {
     init() {
         this.bindEvents();
         this.updateLoginState();
+        this.updatePriceDisplay(); // 初始化時更新一次價格顯示
         this.filterHotels();
+    },
+
+    updatePriceDisplay() {
+        const el = this.elements.priceRange;
+        const display = this.elements.priceDisplay;
+        const max = parseInt(el.max);
+        const current = parseInt(el.value);
+
+        if (current === max) {
+            display.textContent = '無限制';
+        } else {
+            display.textContent = `$${current.toLocaleString()}`;
+        }
     },
 
     bindEvents() {
@@ -343,7 +357,7 @@ const UI = {
             const el = document.getElementById(id);
             if (el) {
                 el.addEventListener(id === 'priceRange' ? 'input' : 'change', () => {
-                    if (id === 'priceRange') this.elements.priceDisplay.textContent = `$${parseInt(this.elements.priceRange.value).toLocaleString()}`;
+                    if (id === 'priceRange') this.updatePriceDisplay();
                     this.filterHotels();
                 });
             }
@@ -450,11 +464,12 @@ const UI = {
 
     filterHotels() {
         const maxPrice = parseInt(this.elements.priceRange.value);
+        const isPriceUnlimited = maxPrice === parseInt(this.elements.priceRange.max);
         const minSize = parseInt(this.elements.sizeFilter.value);
 
         State.currentFilteredHotels = hotels.filter(h => {
             // 基本預算與空間過濾
-            if (h.price > maxPrice) return false;
+            if (!isPriceUnlimited && h.price > maxPrice) return false;
             if (minSize > 0 && h.size < minSize) return false;
 
             // 動態標籤過濾：所有屬性現在均為 True = 正面/良好
