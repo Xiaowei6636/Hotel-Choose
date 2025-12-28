@@ -137,6 +137,13 @@ export const hotels = [
         "hasWiFi": false,
         "hasPool": false,
         "hasWashingMachine": false
+    },
+    {
+        "name": "不是測試的測試飯店",
+        "price": 5000,
+        "size": 10000000000,
+        "note": "",
+        "isSoundproof": true
     }
 ];
 
