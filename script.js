@@ -650,6 +650,16 @@ const UI = {
         try {
             const res = await GitHubService.createPR(data, hotelIndex, originalName, action);
 
+            // PR 成功後，直接在本地更新資料並重繪 UI
+            if (action === 'delete') {
+                hotels.splice(hotelIndex, 1);
+            } else if (action === 'update') {
+                hotels[hotelIndex] = { ...hotels[hotelIndex], ...data };
+            } else if (action === 'add') {
+                hotels.push(data);
+            }
+            this.filterHotels(); // 重繪畫面
+
             // 立即關閉 Modal
             this.elements.editModal.classList.add('hidden');
 
