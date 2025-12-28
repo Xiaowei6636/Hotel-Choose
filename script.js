@@ -580,9 +580,12 @@ const UI = {
         document.getElementById('edit-size').value = h.size;
         document.getElementById('edit-note').value = h.note || '';
 
-        // Populate coordinate fields
-        document.getElementById('edit-lat').value = h.lat || '';
-        document.getElementById('edit-lon').value = h.lon || '';
+        // Populate coordinate field
+        if (h.lat && h.lon) {
+            document.getElementById('edit-coords').value = `${h.lat}, ${h.lon}`;
+        } else {
+            document.getElementById('edit-coords').value = '';
+        }
 
         // 顯示/隱藏刪除按鈕
         this.elements.deleteHotelBtn.classList.toggle('hidden', isAdd);
@@ -651,13 +654,18 @@ const UI = {
             data[tag.key] = val === 'true' ? true : (val === 'false' ? false : undefined);
         });
 
-        const lat = parseFloat(document.getElementById('edit-lat').value);
-        const lon = parseFloat(document.getElementById('edit-lon').value);
-        if (!isNaN(lat) && !isNaN(lon) && lat !== 0 && lon !== 0) {
-            data.lat = lat;
-            data.lon = lon;
+        const coordsValue = document.getElementById('edit-coords').value.trim();
+        if (coordsValue) {
+            const parts = coordsValue.split(',').map(s => s.trim());
+            if (parts.length === 2) {
+                const lat = parseFloat(parts[0]);
+                const lon = parseFloat(parts[1]);
+                if (!isNaN(lat) && !isNaN(lon)) {
+                    data.lat = lat;
+                    data.lon = lon;
+                }
+            }
         } else {
-            // If fields are empty or zero, ensure they are not added to the PR data
             delete data.lat;
             delete data.lon;
         }
