@@ -125,20 +125,6 @@ export const hotels = [
         "hasPlentyOutlets": true
     },
     {
-        "name": "天價飯店",
-        "price": 99999,
-        "size": 1,
-        "note": "",
-        "cancelable": false,
-        "isSafeLocation": false,
-        "isSoundproof": false,
-        "hasRealBed": false,
-        "hasPlentyOutlets": false,
-        "hasWiFi": false,
-        "hasPool": false,
-        "hasWashingMachine": false
-    },
-    {
         "name": "不是測試的測試飯店",
         "price": 5000,
         "size": 10000000000,
