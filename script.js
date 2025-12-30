@@ -580,6 +580,13 @@ const UI = {
         document.getElementById('edit-size').value = h.size;
         document.getElementById('edit-note').value = h.note || '';
 
+        // Populate coordinate field
+        if (h.lat && h.lon) {
+            document.getElementById('edit-coords').value = `${h.lat}, ${h.lon}`;
+        } else {
+            document.getElementById('edit-coords').value = '';
+        }
+
         // 顯示/隱藏刪除按鈕
         this.elements.deleteHotelBtn.classList.toggle('hidden', isAdd);
 
@@ -647,8 +654,34 @@ const UI = {
             data[tag.key] = val === 'true' ? true : (val === 'false' ? false : undefined);
         });
 
+        const coordsValue = document.getElementById('edit-coords').value.trim();
+        if (coordsValue) {
+            const parts = coordsValue.split(',').map(s => s.trim());
+            if (parts.length === 2) {
+                const lat = parseFloat(parts[0]);
+                const lon = parseFloat(parts[1]);
+                if (!isNaN(lat) && !isNaN(lon)) {
+                    data.lat = lat;
+                    data.lon = lon;
+                }
+            }
+        } else {
+            delete data.lat;
+            delete data.lon;
+        }
+
         try {
             const res = await GitHubService.createPR(data, hotelIndex, originalName, action);
+
+            // PR 成功後，直接在本地更新資料並重繪 UI
+            if (action === 'delete') {
+                hotels.splice(hotelIndex, 1);
+            } else if (action === 'update') {
+                hotels[hotelIndex] = { ...hotels[hotelIndex], ...data };
+            } else if (action === 'add') {
+                hotels.push(data);
+            }
+            this.filterHotels(); // 重繪畫面
 
             // 立即關閉 Modal
             this.elements.editModal.classList.add('hidden');
@@ -675,9 +708,9 @@ const UI = {
                 </div>
                 <div class="text-slate-600 text-xs">${err.message}</div>
             `);
+        } finally {
             saveBtn.disabled = false;
             deleteBtn.disabled = false;
-        } finally {
             btnText.textContent = originalBtnText;
             btnText.classList.remove('hidden');
             spinner.classList.add('hidden');
