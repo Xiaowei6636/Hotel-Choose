@@ -151,6 +151,12 @@ export const hotels = [
         "hasWiFi": true,
         "hasPool": true,
         "hasWashingMachine": true
+    },
+    {
+        "name": "ABC TEST",
+        "price": 5000,
+        "size": 20,
+        "note": ""
     }
 ];
 
