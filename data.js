@@ -157,6 +157,13 @@ export const hotels = [
         "price": 5000,
         "size": 20,
         "note": ""
+    },
+    {
+        "name": "The Initial Sama Serviced Residences",
+        "price": 9345,
+        "size": 28,
+        "note": "28-35平方公尺",
+        "cancelable": true
     }
 ];
 
