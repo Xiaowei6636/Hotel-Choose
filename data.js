@@ -163,7 +163,9 @@ export const hotels = [
         "price": 9345,
         "size": 28,
         "note": "28-35平方公尺",
-        "cancelable": true
+        "cancelable": true,
+        "lat": 1.3188534,
+        "lon": 103.8202995
     }
 ];
 
