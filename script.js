@@ -28,23 +28,25 @@ const CONFIG = {
 const DataService = {
     async loadMRTStations() {
         try {
-            const response = await fetch('https://raw.githubusercontent.com/datagovsg/fare-based-mrt-station-data/main/data/mrt_station_data.json');
+            // NOTE: The original data source was 404. Switched to a GeoJSON source for MRT exits.
+            // This new source does not contain line color data.
+            const response = await fetch('https://s3.ap-southeast-1.amazonaws.com/blobs.data.gov.sg/d_b39d3a0871985372d7e1637193335da5.geojson?AWSAccessKeyId=ASIAU7LWPY2WDMPL2ZRD&Expires=1767254420&Signature=XIL%2FXkwo6P65rLErKwuFkpWomXc%3D&X-Amzn-Trace-Id=Root%3D1-69561b84-43c3e01a2670053c718458d8%3BParent%3D560390ea4a8d987f%3BSampled%3D0%3BLineage%3D1%3Affb76583%3A0&response-content-disposition=attachment%3B%20filename%3D%22LTAMRTStationExitGEOJSON.geojson%22&x-amz-security-token=IQoJb3JpZ2luX2VjEBUaDmFwLXNvdXRoZWFzdC0xIkcwRQIgXgNhQUGOq8rzDzjUDi4p7gm7b0qf56GR7LY0l5RLtOwCIQCWqQUTpLS%2FEHHGjbd6LGzo%2BkiPOS5Np92AD6%2F4Z7%2B6DiqzAwje%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F8BEAQaDDM0MjIzNTI2ODc4MCIMuCskqJb13whUqz%2BJKocDKpjUvU5OFewpWthsjfU5lov6%2FUcVDYvjkk7Ab2%2BAdNFa8Ql4PajbrklNVblP5IU7%2B5cDCbwUQurak01nS6s8XIzBtJurQk%2FPLBKQFZGO4MwCo1WLGI6NfIjYGlO6V5PejUu6WSeKywuFC5f298lSLSlO6R1uJmfa1p6TRO0g0EVJ8TK7ikfMoE0SK1OfYqcqCbe5R80OasnET10COYwXb6oaNeB%2BmPr0sulXW7p9g%2BxUV8B0Xg4MRHWA35Ubmhw2Da6pcCNU5LIBGlpfP8voDddhpKiB6lCe1x3RM7lxW%2F%2F1zqnYBVvdLvdQryAUl8s7RN6z5uNTdw%2Fwv0uFT%2BDIuy0bcVy%2BUe0R9aBJWcfvFSL8VQHiWE2RdKWq09g6JiXQ30lgLP1ayiKXuCsgoV3X9Ahq6gTzYhIHvzX7Z%2BJxDzyqaCfG7tHIsfmpPfSOoGYRXRXuNvyrMMFFeaKxeIuAg4bnKShGC4OomOR60s8IKkYXq95RX16e%2BFJGgL25A1CNy4X8PgTixTDfiNjKBjqdAe3YpQpBr53%2BBRHsIE4u6D0JEOS06XmDjReheBtqtSrO7h5UqTBbp1kDC6UU%2FaNehdOqFUwxCAyE97P22vv7Ve26OnBBJkI08pH3yrGuUIsMvTJHPaaTK1sGWh%2Bqz2afB%2BJ0mgPcwNAfTMm%2B5FiKlKWlPZ9vu7wzO7rzBruSSbXZTJ6Yh3OJGW05710pA0PgXPphdBb0BZNjIdIfoCU%3D');
             const data = await response.json();
-            const stations = Object.entries(data).map(([code, details]) => {
-                const name = details['MRT Station'];
-                const [lat, lon] = details.coordinates.split(',').map(Number);
-                const lineCode = code.substring(0, 2);
-                let color = '#748477';
-                if (['NS', 'NE', 'CG', 'CE', 'CC', 'DT', 'TE'].includes(lineCode)) {
-                    if (lineCode === 'NS') color = '#d42e12';
-                    else if (lineCode === 'NE') color = '#800080';
-                    else if (['CG', 'CE'].includes(lineCode)) color = '#009645';
-                    else if (lineCode === 'CC') color = '#ff9a00';
-                    else if (lineCode === 'DT') color = '#005ec4';
-                    else if (lineCode === 'TE') color = '#733104';
+
+            const uniqueStations = {};
+            data.features.forEach(feature => {
+                const stationName = feature.properties.STATION_NA.replace(" MRT STATION", "").replace(" LRT STATION", "").trim();
+                if (!uniqueStations[stationName]) {
+                    uniqueStations[stationName] = {
+                        name: stationName,
+                        // GeoJSON coordinates are [lon, lat], we need [lat, lon]
+                        coordinates: [feature.geometry.coordinates[1], feature.geometry.coordinates[0]],
+                        color: '#334155' // Default color as new source lacks this
+                    };
                 }
-                return { name, coordinates: [lat, lon], color };
             });
+
+            const stations = Object.values(uniqueStations);
             State.mrtStations = stations;
             State.mrtGeoJSON = {
                 type: "FeatureCollection",
@@ -55,7 +57,7 @@ const DataService = {
                 }))
             };
         } catch (error) {
-            console.error('無法載入捷運站點資料:', error);
+            console.error('無法載入或解析捷運站點資料:', error);
         }
     },
 

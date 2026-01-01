@@ -1,4 +1,1 @@
-127.0.0.1 - - [01/Jan/2026 06:38:00] "GET / HTTP/1.1" 200 -
-127.0.0.1 - - [01/Jan/2026 06:38:00] "GET /style.css HTTP/1.1" 200 -
-127.0.0.1 - - [01/Jan/2026 06:38:00] "GET /script.js HTTP/1.1" 200 -
-127.0.0.1 - - [01/Jan/2026 06:38:01] "GET /data.js HTTP/1.1" 200 -
+/home/jules/.pyenv/versions/3.12.12/bin/python: can't open file '/app/server.py': [Errno 2] No such file or directory
