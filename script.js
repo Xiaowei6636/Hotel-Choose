@@ -23,6 +23,73 @@ const CONFIG = {
 };
 
 /**
+ * --- 資料處理服務 ---
+ */
+const DataService = {
+    async loadMRTStations() {
+        try {
+            const response = await fetch('https://raw.githubusercontent.com/datagovsg/fare-based-mrt-station-data/main/data/mrt_station_data.json');
+            const data = await response.json();
+            const stations = Object.entries(data).map(([code, details]) => {
+                const name = details['MRT Station'];
+                const [lat, lon] = details.coordinates.split(',').map(Number);
+                const lineCode = code.substring(0, 2);
+                let color = '#748477';
+                if (['NS', 'NE', 'CG', 'CE', 'CC', 'DT', 'TE'].includes(lineCode)) {
+                    if (lineCode === 'NS') color = '#d42e12';
+                    else if (lineCode === 'NE') color = '#800080';
+                    else if (['CG', 'CE'].includes(lineCode)) color = '#009645';
+                    else if (lineCode === 'CC') color = '#ff9a00';
+                    else if (lineCode === 'DT') color = '#005ec4';
+                    else if (lineCode === 'TE') color = '#733104';
+                }
+                return { name, coordinates: [lat, lon], color };
+            });
+            State.mrtStations = stations;
+            State.mrtGeoJSON = {
+                type: "FeatureCollection",
+                features: stations.map(s => ({
+                    type: "Feature",
+                    properties: { name: s.name, color: s.color },
+                    geometry: { type: "Point", coordinates: [s.coordinates[1], s.coordinates[0]] }
+                }))
+            };
+        } catch (error) {
+            console.error('無法載入捷運站點資料:', error);
+        }
+    },
+
+    enrichHotelData() {
+        if (State.mrtStations.length === 0) {
+            console.warn("MRT station data not available for hotel data enrichment.");
+            return;
+        }
+
+        hotels.forEach(hotel => {
+            const coords = (hotel.lat && hotel.lon) ? { lat: hotel.lat, lon: hotel.lon } : State.coordsCache[hotel.name];
+            if (!coords) return;
+
+            let closestStation = null;
+            let minDistance = Infinity;
+
+            State.mrtStations.forEach(station => {
+                const distance = Utils.calculateDistance(coords.lat, coords.lon, station.coordinates[0], station.coordinates[1]);
+                if (distance < minDistance) {
+                    minDistance = distance;
+                    closestStation = station;
+                }
+            });
+
+            if (closestStation) {
+                hotel.nearestStationName = closestStation.name;
+                hotel.nearestStationDistance = minDistance;
+                hotel.nearestStationColor = closestStation.color;
+            }
+        });
+    }
+};
+
+/**
  * --- 全域狀態 ---
  */
 const State = {
@@ -33,6 +100,9 @@ const State = {
     markerLayer: L.layerGroup(),
     pendingEditIndex: null,
     dataSha: null,
+    mrtStations: [],
+    mrtGeoJSON: null,
+    currentMrtMarker: null,
 };
 
 /**
@@ -45,6 +115,18 @@ const Utils = {
         localStorage.removeItem(CONFIG.CACHE_KEY);
         State.coordsCache = {};
         location.reload();
+    },
+    // Haversine formula to calculate distance between two lat/lon points
+    calculateDistance(lat1, lon1, lat2, lon2) {
+        const R = 6371; // Radius of the Earth in km
+        const dLat = (lat2 - lat1) * Math.PI / 180;
+        const dLon = (lon2 - lon1) * Math.PI / 180;
+        const a =
+            Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+            Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+            Math.sin(dLon / 2) * Math.sin(dLon / 2);
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        return R * c; // Distance in km
     }
 };
 
@@ -71,21 +153,21 @@ const MapService = {
     },
 
     async geocodeAll() {
-        for (const h of hotels) {
+        const geocodingPromises = hotels.map(async (h) => {
             if (h.lat && h.lon) {
                 State.coordsCache[h.name] = { lat: h.lat, lon: h.lon };
-                this.updateMarkers();
-                UI.renderDebugList();
-                continue;
+                return; // Already has coordinates
             }
-
             if (!State.coordsCache[h.name]) {
-                await this.getCoordinates(h.name);
-                this.updateMarkers();
-                UI.renderDebugList();
-                await Utils.delay(CONFIG.NOMINATIM_DELAY);
+                await Utils.delay(CONFIG.NOMINATIM_DELAY); // Wait before the request
+                const coords = await this.getCoordinates(h.name);
+                if (coords) {
+                    State.coordsCache[h.name] = coords;
+                }
             }
-        }
+        });
+        await Promise.all(geocodingPromises);
+        Utils.saveCache(); // Save cache once at the end
     },
 
     init() {
@@ -135,6 +217,30 @@ const MapService = {
             });
     },
 
+    highlightMRTStation(hotel) {
+        if (State.currentMrtMarker) {
+            State.map.removeLayer(State.currentMrtMarker);
+        }
+        if (!hotel.nearestStationName || !State.mrtGeoJSON) return;
+
+        const stationFeature = State.mrtGeoJSON.features.find(
+            f => f.properties.name === hotel.nearestStationName
+        );
+
+        if (stationFeature) {
+            const [lon, lat] = stationFeature.geometry.coordinates;
+            State.currentMrtMarker = L.circleMarker([lat, lon], {
+                radius: 8,
+                fillColor: stationFeature.properties.color,
+                color: "#fff",
+                weight: 2,
+                opacity: 1,
+                fillOpacity: 0.9
+            }).bindTooltip(hotel.nearestStationName, { permanent: true, direction: 'top', offset: [0, -10] }).addTo(State.map);
+        }
+    },
+
+
     updateMarkers() {
         if (!State.map) return;
         State.markerLayer.clearLayers();
@@ -152,6 +258,21 @@ const MapService = {
         Object.values(groups).forEach(group => {
             const marker = L.marker([group.coords.lat, group.coords.lon]);
             let content = `<div class="p-1 min-w-[200px] max-w-[280px] max-h-[400px] overflow-y-auto">`;
+
+            marker.on('click', () => {
+                // 當點擊飯店標記時，只高亮距離最近的一間飯店的捷運站
+                if (group.hotels.length > 0) {
+                    MapService.highlightMRTStation(group.hotels[0]);
+                }
+            });
+
+            marker.on('popupclose', () => {
+                if (State.currentMrtMarker) {
+                    State.map.removeLayer(State.currentMrtMarker);
+                    State.currentMrtMarker = null;
+                }
+            });
+
 
             if (group.hotels.length > 1) {
                 content += `<div class="sticky top-0 bg-white border-b mb-2 pb-2 z-10 font-bold text-sm text-blue-600">此處有 ${group.hotels.length} 間飯店</div>`;
@@ -308,6 +429,8 @@ const UI = {
         priceRange: document.getElementById('priceRange'),
         priceDisplay: document.getElementById('priceDisplay'),
         sizeFilter: document.getElementById('sizeFilter'),
+        mrtDistanceRange: document.getElementById('mrtDistanceRange'),
+        mrtDistanceDisplay: document.getElementById('mrtDistanceDisplay'),
         cancelableOnly: document.getElementById('cancelableOnly'),
         viewToggleBtn: document.getElementById('viewToggleBtn'),
         mainContent: document.getElementById('mainContent'),
@@ -333,8 +456,9 @@ const UI = {
     init() {
         this.bindEvents();
         this.updateLoginState();
-        this.updatePriceDisplay(); // 初始化時更新一次價格顯示
-        this.filterHotels();
+        this.updatePriceDisplay();
+        this.updateMRTDistantDisplay();
+        // filterHotels() will be called by the main initialize function
     },
 
     updatePriceDisplay() {
@@ -350,14 +474,29 @@ const UI = {
         }
     },
 
+    updateMRTDistantDisplay() {
+        const el = this.elements.mrtDistanceRange;
+        const display = this.elements.mrtDistanceDisplay;
+        const max = parseFloat(el.max);
+        const current = parseFloat(el.value);
+
+        if (current >= max) {
+            display.textContent = '無限制';
+        } else {
+            display.textContent = `< ${current.toFixed(1)} km`;
+        }
+    },
+
+
     bindEvents() {
         // 篩選器監聽
-        const filters = ['priceRange', 'sizeFilter', 'cancelableOnly', 'safeAreaFilter', 'goodSoundFilter', 'realBedFilter', 'plentyOutletsFilter', 'wifiFilter', 'poolFilter', 'washerFilter'];
+        const filters = ['priceRange', 'sizeFilter', 'mrtDistanceRange', 'cancelableOnly', 'safeAreaFilter', 'goodSoundFilter', 'realBedFilter', 'plentyOutletsFilter', 'wifiFilter', 'poolFilter', 'washerFilter'];
         filters.forEach(id => {
             const el = document.getElementById(id);
             if (el) {
-                el.addEventListener(id === 'priceRange' ? 'input' : 'change', () => {
+                el.addEventListener(id.includes('Range') ? 'input' : 'change', () => {
                     if (id === 'priceRange') this.updatePriceDisplay();
+                    if (id === 'mrtDistanceRange') this.updateMRTDistantDisplay();
                     this.filterHotels();
                 });
             }
@@ -466,11 +605,16 @@ const UI = {
         const maxPrice = parseInt(this.elements.priceRange.value);
         const isPriceUnlimited = maxPrice === parseInt(this.elements.priceRange.max);
         const minSize = parseInt(this.elements.sizeFilter.value);
+        const maxMrtDistance = parseFloat(this.elements.mrtDistanceRange.value);
+        const isMrtDistanceUnlimited = maxMrtDistance >= parseFloat(this.elements.mrtDistanceRange.max);
+
 
         State.currentFilteredHotels = hotels.filter(h => {
             // 基本預算與空間過濾
             if (!isPriceUnlimited && h.price > maxPrice) return false;
             if (minSize > 0 && h.size < minSize) return false;
+            if (!isMrtDistanceUnlimited && (h.nearestStationDistance === undefined || h.nearestStationDistance > maxMrtDistance)) return false;
+
 
             // 動態標籤過濾：所有屬性現在均為 True = 正面/良好
             for (const tag of CONFIG.ALL_TAGS) {
@@ -496,6 +640,17 @@ const UI = {
             const card = document.createElement('div');
             card.className = `hotel-card bg-white rounded-2xl overflow-hidden shadow-sm border border-slate-100 flex flex-col cursor-pointer hover:border-blue-200 transition-all`;
             card.dataset.index = hotels.indexOf(h);
+
+            let mrtInfoHTML = '';
+            if (h.nearestStationName && h.nearestStationDistance !== undefined) {
+                const distanceInMeters = (h.nearestStationDistance * 1000).toFixed(0);
+                mrtInfoHTML = `
+                    <div class="flex items-center text-sm font-bold mt-2" style="color: ${h.nearestStationColor || '#334155'};">
+                        <svg class="w-4 h-4 mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                        <span>${h.nearestStationName}站 (約 ${distanceInMeters}m)</span>
+                    </div>
+                `;
+            }
 
             // 準備標籤並進行排序 (true > false > undefined)
             const tagHTML = CONFIG.ALL_TAGS
@@ -548,6 +703,7 @@ const UI = {
                     </div>
                     <div class="space-y-2 mt-4">
                         <div class="flex items-center text-sm text-slate-800 font-medium"><svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"></path></svg>${h.size > 0 ? h.size + ' 平方公尺' : '未提供空間資訊'}</div>
+                        ${mrtInfoHTML}
                         <hr class="border-slate-100 my-2">
                         <div class="space-y-2">${tagHTML}</div>
                     </div>
@@ -767,9 +923,16 @@ const UI = {
 /**
  * --- 初始化 ---
  */
-UI.init();
-MapService.geocodeAll();
+async function initialize() {
+    UI.init(); // 先初始化 UI，顯示基本介面
+    await DataService.loadMRTStations(); // 等待捷運資料載入
+    await MapService.geocodeAll(); // 等待所有座標查詢完成
+    DataService.enrichHotelData(); // 進行資料關聯
+    UI.filterHotels(); // 最後根據完整資料重繪列表
 
-// 啟動更新檢查
-GitHubService.checkForUpdates();
-setInterval(() => GitHubService.checkForUpdates(), 60000);
+    // 啟動更新檢查
+    GitHubService.checkForUpdates();
+    setInterval(() => GitHubService.checkForUpdates(), 60000);
+}
+
+initialize();

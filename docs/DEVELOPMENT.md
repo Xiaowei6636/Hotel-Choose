@@ -7,9 +7,10 @@
 本專案採用純前端架構 (Vanilla JS + Tailwind CSS + Leaflet)，代碼已進行模組化重構：
 
 - `CONFIG`: 儲存全域設定與標籤定義（如 `ALL_TAGS`）。
-- `State`: 儲存執行時期的狀態（如地圖實例、過濾後的飯店列表、座標快取）。
-- `Utils`: 共通工具函式（如 延遲、快取存取）。
-- `MapService`: 處理地圖初始化、標記更新、以及 Nominatim 地理編碼邏輯。
+- `State`: 儲存執行時期的狀態（如地圖實例、過濾後的飯店列表、座標快取、捷運資料）。
+- `Utils`: 共通工具函式（如 延遲、快取存取、距離計算）。
+- `DataService`: 負責業務邏輯相關的資料處理，例如將捷運站資料與飯店資料進行關聯（enrich）。
+- `MapService`: 處理地圖初始化、標記更新、以及 Nominatim 地理編碼與捷運資料載入邏輯。
 - `GitHubService`: 封裝 GitHub API 互動，包含登入驗證與建立 PR。
 - `UI`: 處理所有 DOM 操作、事件綁定與頁面渲染。
 
@@ -58,14 +59,37 @@
 
 ## 5. 地圖與座標處理
 
-- **快取**: 座標會存存在 `localStorage` 的 `hotel_coords_cache_v1` 中。
+- **快取**: 飯店座標會存存在 `localStorage` 的 `hotel_coords_cache_v1` 中。
 - **Nominatim 政策**: 地圖查詢使用 OpenStreetMap 的 Nominatim API，須遵守每秒最多 1 次請求的規範。程式中已內建 `delay(1200)` 以確保合規。
 - **手動座標**: 若飯店在 `data.js` 中有提供 `lat` 與 `lon`，系統會優先使用手動座標，跳過 API 查詢。
 
-## 6. 常見問題與除錯
+## 6. 捷運 (MRT) 資料整合
+
+捷運距離功能是此專案的核心功能之一，其運作流程如下：
+
+1.  **資料來源**:
+    *   **捷運路線**: `https://raw.githubusercontent.com/cheeaun/sgraildata/master/data/v1/sg-rail.geojson`
+    *   **捷運站點**: `https://raw.githubusercontent.com/datagovsg/fare-based-mrt-station-data/main/data/mrt_station_data.json`
+
+2.  **資料載入與處理**:
+    *   `DataService.loadMRTStations()`: 在應用程式啟動時非同步地從遠端來源獲取捷運站點資料。
+    *   資料被處理成 `State.mrtStations` 陣列，每個站點物件包含 `name`, `coordinates`, `color`。
+
+3.  **資料關聯 (Enrichment)**:
+    *   `DataService.enrichHotelData()`: 在所有飯店的地理座標都確定後 (`geocodeAll` 完成後) 執行。
+    *   此函式會遍歷所有飯店，使用 `Utils.calculateDistance` 計算每個飯店與所有捷運站的距離。
+    *   找到最近的站點後，將 `nearestStationName`、`nearestStationDistance` (單位: 公里)、`nearestStationColor` 三個屬性附加到對應的飯店物件上。
+
+4.  **UI 整合**:
+    *   **篩選器**: `index.html` 包含一個 ID 為 `mrtDistanceRange` 的拉桿。`script.js` 中的 `UI.bindEvents` 和 `UI.updateMRTDistantDisplay` 負責監聽其變化並更新顯示。
+    *   **過濾邏輯**: `UI.filterHotels()` 會讀取距離拉桿的值，並過濾掉 `nearestStationDistance` 大於設定值的飯店。
+    *   **卡片顯示**: `UI.renderList()` 會讀取飯店物件上的捷運相關屬性，並將站點名稱、距離（換算為公尺）和路線顏色動態渲染到飯店卡片上。
+    *   **地圖高亮**: 當使用者點擊地圖上的飯店標記時，`MapService.highlightMRTStation()` 會被觸發，在地圖上繪製一個圓點來標示最近的捷運站位置，並在關閉彈出視窗時移除。
+
+## 7. 常見問題與除錯
 
 - **座標查不到**: 某些飯店名稱可能在 OSM 中找不到。開發者可以透過「三連擊標題」開啟偵錯面板，手動測試搜尋路徑或在 `data.js` 直接補上座標。
 - **PR 建立失敗**: 通常是因為 GitHub PAT 權限不足（需 Contents: Read & Write, Pull requests: Read & Write）。
 
 ---
-*最後更新日期: 2025-12-27*
+*最後更新日期: 2024-05-21*
