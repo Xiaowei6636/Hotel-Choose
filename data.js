@@ -166,6 +166,18 @@ export const hotels = [
         "cancelable": true,
         "lat": 1.3188534,
         "lon": 103.8202995
+    },
+    {
+        "name": "The White House by Cove & Belle Living",
+        "price": 5144,
+        "size": 37,
+        "note": "智慧門鎖/微波爐/廚房/購物中心",
+        "cancelable": true,
+        "isSoundproof": false,
+        "hasRealBed": true,
+        "hasWiFi": true,
+        "hasPool": false,
+        "hasWashingMachine": true
     }
 ];
 
