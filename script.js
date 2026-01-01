@@ -31,6 +31,8 @@ const State = {
     map: null,
     isMapView: false,
     markerLayer: L.layerGroup(),
+    mrtStations: [],
+    mrtHighlightLayer: L.layerGroup(),
     pendingEditIndex: null,
     dataSha: null,
 };
@@ -114,9 +116,12 @@ const MapService = {
     },
 
     loadMRTLines() {
+        if (State.mrtStations.length > 0) return; // 避免重複載入
+
         fetch('https://raw.githubusercontent.com/cheeaun/sgraildata/master/data/v1/sg-rail.geojson')
             .then(res => res.json())
             .then(data => {
+                // 1. 渲染捷運線
                 L.geoJSON(data, {
                     filter: f => f.geometry.type.includes('LineString'),
                     style: f => {
@@ -132,7 +137,73 @@ const MapService = {
                         return { color, weight: 2, opacity: 0.5 };
                     }
                 }).addTo(State.map);
+
+                // 2. 存儲站點資料 (僅保留主站點，排除出口/入口)
+                State.mrtStations = data.features.filter(f =>
+                    f.geometry.type === 'Point' &&
+                    f.properties.stop_type === 'station'
+                );
+
+                // 3. 設置滑鼠監聽
+                State.map.on('mousemove', (e) => this.highlightNearestStation(e.latlng));
+
+                // 4. 初始化高亮層
+                State.mrtHighlightLayer.addTo(State.map);
             });
+    },
+
+    highlightNearestStation(latlng) {
+        if (!State.mrtStations.length) return;
+
+        let nearest = null;
+        let minDist = Infinity;
+
+        State.mrtStations.forEach(station => {
+            const stationLatLng = L.latLng(station.geometry.coordinates[1], station.geometry.coordinates[0]);
+            const dist = latlng.distanceTo(stationLatLng);
+            if (dist < minDist) {
+                minDist = dist;
+                nearest = station;
+            }
+        });
+
+        // 僅在 1.5 公里內顯示
+        if (nearest && minDist < 1500) {
+            const coords = nearest.geometry.coordinates;
+            const props = nearest.properties;
+            const nameZh = props['name_zh-Hans'] || props['name'] || '未知站名';
+            const code = props['station_codes'] || '';
+            const displayText = code ? `${nameZh} (${code})` : nameZh;
+
+            // 如果已經顯示的是同一個站且位置沒變，就不重新渲染
+            const currentMarker = State.mrtHighlightLayer.getLayers()[0];
+            if (currentMarker && currentMarker.options.stationName === displayText) return;
+
+            State.mrtHighlightLayer.clearLayers();
+
+            const marker = L.circleMarker([coords[1], coords[0]], {
+                radius: 6,
+                fillColor: '#ffffff',
+                color: '#334155',
+                weight: 2,
+                opacity: 1,
+                fillOpacity: 1,
+                stationName: displayText
+            });
+
+            marker.bindTooltip(`捷運站: ${displayText}`, {
+                permanent: true,
+                direction: 'top',
+                offset: [0, -10],
+                className: 'mrt-tooltip'
+            });
+
+            marker.addTo(State.mrtHighlightLayer);
+        } else {
+            if (State.mrtHighlightLayer.getLayers().length > 0) {
+                State.mrtHighlightLayer.clearLayers();
+            }
+        }
     },
 
     updateMarkers() {
