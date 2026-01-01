@@ -72,3 +72,20 @@ body {
 .mrt-tooltip::before {
     border-top-color: #ffffff !important;
 }
+
+/* MRT Station Marker Styles */
+.mrt-marker-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.mrt-dot {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    border: 2px solid #ffffff;
+    box-shadow: 0 0 4px rgba(0, 0, 0, 0.4);
+    box-sizing: border-box;
+    transition: all 0.2s ease;
+}

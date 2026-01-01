@@ -19,7 +19,30 @@ const CONFIG = {
         { key: 'hasWiFi', label: 'WiFi', type: 'amenity', filterId: 'wifiFilter' },
         { key: 'hasPool', label: '游泳池', type: 'amenity', filterId: 'poolFilter' },
         { key: 'hasWashingMachine', label: '洗衣機', type: 'amenity', filterId: 'washerFilter' },
-    ]
+    ],
+    MRT: {
+        COLORS: {
+            'NS': '#d42e12',
+            'EW': '#009645',
+            'NE': '#800080',
+            'CC': '#ff9a00',
+            'DT': '#005ec4',
+            'TE': '#733104',
+            'BP': '#748477',
+            'SK': '#748477',
+            'PG': '#748477',
+            'CE': '#ff9a00',
+            'CG': '#009645',
+        },
+        NAME_COLORS: {
+            'north south': '#d42e12',
+            'east west': '#009645',
+            'north east': '#800080',
+            'circle': '#ff9a00',
+            'downtown': '#005ec4',
+            'thomson': '#733104'
+        }
+    }
 };
 
 /**
@@ -128,12 +151,25 @@ const MapService = {
                         const name = (f.properties.name || '').toLowerCase();
                         const colors = (f.properties.station_colors || '').toLowerCase();
                         let color = '#748477';
-                        if (colors.includes('red') || name.includes('north south')) color = '#d42e12';
-                        else if (colors.includes('green') || name.includes('east west')) color = '#009645';
-                        else if (colors.includes('purple') || name.includes('north east')) color = '#800080';
-                        else if (colors.includes('yellow') || colors.includes('orange') || name.includes('circle')) color = '#ff9a00';
-                        else if (colors.includes('blue') || name.includes('downtown')) color = '#005ec4';
-                        else if (colors.includes('brown') || name.includes('thomson')) color = '#733104';
+
+                        // 優先檢查名稱
+                        for (const [key, val] of Object.entries(CONFIG.MRT.NAME_COLORS)) {
+                            if (name.includes(key)) {
+                                color = val;
+                                break;
+                            }
+                        }
+
+                        // 如果沒找到，檢查顏色文字
+                        if (color === '#748477') {
+                            if (colors.includes('red')) color = CONFIG.MRT.COLORS.NS;
+                            else if (colors.includes('green')) color = CONFIG.MRT.COLORS.EW;
+                            else if (colors.includes('purple')) color = CONFIG.MRT.COLORS.NE;
+                            else if (colors.includes('yellow') || colors.includes('orange')) color = CONFIG.MRT.COLORS.CC;
+                            else if (colors.includes('blue')) color = CONFIG.MRT.COLORS.DT;
+                            else if (colors.includes('brown')) color = CONFIG.MRT.COLORS.TE;
+                        }
+
                         return { color, weight: 2, opacity: 0.5 };
                     }
                 }).addTo(State.map);
@@ -181,13 +217,41 @@ const MapService = {
 
             State.mrtHighlightLayer.clearLayers();
 
-            const marker = L.circleMarker([coords[1], coords[0]], {
-                radius: 6,
-                fillColor: '#ffffff',
-                color: '#334155',
-                weight: 2,
-                opacity: 1,
-                fillOpacity: 1,
+            // 取得站點顏色
+            const getStationColors = (codesString) => {
+                if (!codesString) return ['#ffffff'];
+                // 修正分割符號，加入灰階/橫線 (-)
+                const codes = codesString.split(/[\/\,\s\-]+/).filter(Boolean).map(c => c.trim().substring(0, 2).toUpperCase());
+                const colors = codes
+                    .filter(c => CONFIG.MRT.COLORS[c])
+                    .map(c => CONFIG.MRT.COLORS[c]);
+                return [...new Set(colors)];
+            };
+
+            const colors = getStationColors(code);
+            let backgroundStyle = '#ffffff';
+
+            if (colors.length === 1) {
+                backgroundStyle = colors[0];
+            } else if (colors.length > 1) {
+                const steps = colors.length;
+                const gradientParts = colors.map((c, i) => {
+                    const start = (i / steps) * 100;
+                    const end = ((i + 1) / steps) * 100;
+                    return `${c} ${start}%, ${c} ${end}%`;
+                });
+                backgroundStyle = `linear-gradient(135deg, ${gradientParts.join(', ')})`;
+            }
+
+            const icon = L.divIcon({
+                className: 'mrt-marker-icon',
+                html: `<div class="mrt-dot" style="background: ${backgroundStyle}"></div>`,
+                iconSize: [14, 14],
+                iconAnchor: [7, 7]
+            });
+
+            const marker = L.marker([coords[1], coords[0]], {
+                icon: icon,
                 stationName: displayText
             });
 

@@ -61,6 +61,10 @@
 - **快取**: 座標會存存在 `localStorage` 的 `hotel_coords_cache_v1` 中。
 - **Nominatim 政策**: 地圖查詢使用 OpenStreetMap 的 Nominatim API，須遵守每秒最多 1 次請求的規範。程式中已內建 `delay(1200)` 以確保合規。
 - **手動座標**: 若飯店在 `data.js` 中有提供 `lat` 與 `lon`，系統會優先使用手動座標，跳過 API 查詢。
+- **捷運 (MRT) 標示**: 
+    - 捷運線與站點資訊來自 `sgraildata` GeoJSON。
+    - **站點顏色**: 系統會解析 `station_codes`（如 `NS1/EW24` 或 `NS24-NE6-CC1`），並根據 `CONFIG.MRT.COLORS` 自動著色。
+    - **轉乘站 (Interchange)**: 若站點包含多條路線，會以 `linear-gradient` 漸層方式同時顯示多種顏色。
 
 ## 6. 常見問題與除錯
 
@@ -68,4 +72,4 @@
 - **PR 建立失敗**: 通常是因為 GitHub PAT 權限不足（需 Contents: Read & Write, Pull requests: Read & Write）。
 
 ---
-*最後更新日期: 2025-12-27*
+*最後更新日期: 2026-01-01*
