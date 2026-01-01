@@ -68,12 +68,13 @@
 捷運距離功能是此專案的核心功能之一，其運作流程如下：
 
 1.  **資料來源**:
-    *   **捷運路線**: `https://raw.githubusercontent.com/cheeaun/sgraildata/master/data/v1/sg-rail.geojson`
-    *   **捷運站點**: `https://raw.githubusercontent.com/datagovsg/fare-based-mrt-station-data/main/data/mrt_station_data.json`
+    *   專案現在使用單一、統一的 GeoJSON 檔案來獲取捷運路線與站點資料：
+    *   `https://raw.githubusercontent.com/cheeaun/sgraildata/master/data/v1/sg-rail.geojson`
 
 2.  **資料載入與處理**:
-    *   `DataService.loadMRTStations()`: 在應用程式啟動時非同步地從遠端來源獲取捷運站點資料。
-    *   資料被處理成 `State.mrtStations` 陣列，每個站點物件包含 `name`, `coordinates`, `color`。
+    *   應用程式啟動時，`initialize()` 函式會非同步地從上述來源獲取 GeoJSON 資料。
+    *   完整的 GeoJSON 資料儲存於 `State.mrtRawGeoJSON`，用於在地圖上繪製捷運路線圖。
+    *   接著，程式會過濾此 GeoJSON，僅抽取出幾何類型為 `Point` 的 features (即站點)，並將其處理成 `State.mrtStations` 陣列。每個站點物件包含 `name`, `coordinates`, `color`。
 
 3.  **資料關聯 (Enrichment)**:
     *   `DataService.enrichHotelData()`: 在所有飯店的地理座標都確定後 (`geocodeAll` 完成後) 執行。
@@ -92,4 +93,4 @@
 - **PR 建立失敗**: 通常是因為 GitHub PAT 權限不足（需 Contents: Read & Write, Pull requests: Read & Write）。
 
 ---
-*最後更新日期: 2024-05-21*
+*最後更新日期: 2026-01-01*
