@@ -177,7 +177,9 @@ export const hotels = [
         "hasRealBed": true,
         "hasWiFi": true,
         "hasPool": false,
-        "hasWashingMachine": true
+        "hasWashingMachine": true,
+        "lat": 1.3010975,
+        "lon": 103.8552397
     }
 ];
 
