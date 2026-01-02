@@ -374,7 +374,10 @@ const MapService = {
                             <h4 class="${isMultiple ? 'text-sm' : 'text-lg'} font-bold">${h.name}</h4>
                             <span class="bg-blue-50 text-blue-700 text-xs px-1.5 py-0.5 rounded font-bold">$${h.price.toLocaleString()}</span>
                         </div>
-                        <div class="text-sm text-slate-600 mt-1">${h.size} m²</div>
+                        <div class="flex items-center text-sm text-slate-600 mt-1 font-medium">
+                            <svg class="w-4 h-4 mr-1.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"></path></svg>
+                            <span>${h.size > 0 ? h.size + ' m²' : '未提供'}</span>
+                        </div>
                         ${(() => {
                         const coords = (h.lat && h.lon) ? { lat: h.lat, lon: h.lon } : State.coordsCache[h.name];
                         if (!coords) return '';
@@ -401,11 +404,11 @@ const MapService = {
                         }
 
                         return `
-                                <div class="text-[10px] mt-1 flex items-center flex-wrap gap-y-1">
-                                    <svg class="w-3 h-3 mr-1 flex-shrink-0" fill="black" viewBox="0 0 24 24"><path d="M12 2c-4 0-8 .5-8 4v9.5C4 17.43 5.57 19 7.5 19L6 20.5v.5h12v-.5L16.5 19c1.93 0 3.5-1.57 3.5-3.5V6c0-3.5-4-4-8-4zM7.5 17c-.83 0-1.5-.67-1.5-1.5S6.67 14 7.5 14s1.5.67 1.5 1.5S8.33 17 7.5 17zm3.5-6H6V6h5v5zm5.5 6c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm2.5-6h-5V6h5v5z"/></svg>
+                                <div class="text-sm mt-1 flex items-center flex-wrap gap-y-1 font-medium">
+                                    <svg class="w-4 h-4 mr-1.5 flex-shrink-0" fill="black" viewBox="0 0 24 24"><path d="M12 2c-4 0-8 .5-8 4v9.5C4 17.43 5.57 19 7.5 19L6 20.5v.5h12v-.5L16.5 19c1.93 0 3.5-1.57 3.5-3.5V6c0-3.5-4-4-8-4zM7.5 17c-.83 0-1.5-.67-1.5-1.5S6.67 14 7.5 14s1.5.67 1.5 1.5S8.33 17 7.5 17zm3.5-6H6V6h5v5zm5.5 6c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm2.5-6h-5V6h5v5z"/></svg>
                                     <span style="${nameStyle}" class="mr-1.5">${nearest.name}</span>
                                     <span class="flex items-center mr-1.5">${badges}</span>
-                                    <span class="text-slate-400 font-medium">${Math.round(nearest.distance)}m</span>
+                                    <span class="text-slate-400">直線距離 ${Math.round(nearest.distance)}m</span>
                                 </div>
                             `;
                     })()}
@@ -852,7 +855,7 @@ const UI = {
                                    <svg class="w-4 h-4 mr-2 flex-shrink-0" fill="black" viewBox="0 0 24 24"><path d="M12 2c-4 0-8 .5-8 4v9.5C4 17.43 5.57 19 7.5 19L6 20.5v.5h12v-.5L16.5 19c1.93 0 3.5-1.57 3.5-3.5V6c0-3.5-4-4-8-4zM7.5 17c-.83 0-1.5-.67-1.5-1.5S6.67 14 7.5 14s1.5.67 1.5 1.5S8.33 17 7.5 17zm3.5-6H6V6h5v5zm5.5 6c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm2.5-6h-5V6h5v5z"/></svg>
                                    <span style="${nameStyle}" class="mr-2">${nearest.name}</span>
                                    <span class="flex items-center mr-2">${badges}</span>
-                                   <span class="text-slate-400 font-bold text-xs">直線距離 ${Math.round(nearest.distance)}m</span>
+                                   <span class="text-slate-400 font-bold">直線距離 ${Math.round(nearest.distance)}m</span>
                                 </div>
                             `;
                 })()}
