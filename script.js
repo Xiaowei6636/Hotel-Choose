@@ -55,6 +55,8 @@ const State = {
     isMapView: false,
     markerLayer: L.layerGroup(),
     mrtStations: [],
+    mrtGeojsonData: null,
+    mrtRoutesRendered: false,
     mrtHighlightLayer: L.layerGroup(),
     pendingEditIndex: null,
     dataSha: null,
@@ -96,9 +98,13 @@ const MapService = {
     },
 
     async geocodeAll() {
+        let needsRender = false;
         for (const h of hotels) {
             if (h.lat && h.lon) {
-                State.coordsCache[h.name] = { lat: h.lat, lon: h.lon };
+                if (!State.coordsCache[h.name]) {
+                    State.coordsCache[h.name] = { lat: h.lat, lon: h.lon };
+                    needsRender = true;
+                }
                 this.updateMarkers();
                 UI.renderDebugList();
                 continue;
@@ -108,9 +114,11 @@ const MapService = {
                 await this.getCoordinates(h.name);
                 this.updateMarkers();
                 UI.renderDebugList();
+                needsRender = true;
                 await Utils.delay(CONFIG.NOMINATIM_DELAY);
             }
         }
+        if (needsRender) UI.renderList();
     },
 
     init() {
@@ -138,54 +146,130 @@ const MapService = {
         this.loadMRTLines();
     },
 
-    loadMRTLines() {
-        if (State.mrtStations.length > 0) return; // 避免重複載入
+    async loadMRTLines() {
+        if (!State.mrtGeojsonData) {
+            try {
+                const res = await fetch('https://raw.githubusercontent.com/cheeaun/sgraildata/master/data/v1/sg-rail.geojson');
+                State.mrtGeojsonData = await res.json();
 
-        fetch('https://raw.githubusercontent.com/cheeaun/sgraildata/master/data/v1/sg-rail.geojson')
-            .then(res => res.json())
-            .then(data => {
-                // 1. 渲染捷運線
-                L.geoJSON(data, {
-                    filter: f => f.geometry.type.includes('LineString'),
-                    style: f => {
-                        const name = (f.properties.name || '').toLowerCase();
-                        const colors = (f.properties.station_colors || '').toLowerCase();
-                        let color = '#748477';
-
-                        // 優先檢查名稱
-                        for (const [key, val] of Object.entries(CONFIG.MRT.NAME_COLORS)) {
-                            if (name.includes(key)) {
-                                color = val;
-                                break;
-                            }
-                        }
-
-                        // 如果沒找到，檢查顏色文字
-                        if (color === '#748477') {
-                            if (colors.includes('red')) color = CONFIG.MRT.COLORS.NS;
-                            else if (colors.includes('green')) color = CONFIG.MRT.COLORS.EW;
-                            else if (colors.includes('purple')) color = CONFIG.MRT.COLORS.NE;
-                            else if (colors.includes('yellow') || colors.includes('orange')) color = CONFIG.MRT.COLORS.CC;
-                            else if (colors.includes('blue')) color = CONFIG.MRT.COLORS.DT;
-                            else if (colors.includes('brown')) color = CONFIG.MRT.COLORS.TE;
-                        }
-
-                        return { color, weight: 2, opacity: 0.5 };
-                    }
-                }).addTo(State.map);
-
-                // 2. 存儲站點資料 (僅保留主站點，排除出口/入口)
-                State.mrtStations = data.features.filter(f =>
+                // 1. 存儲站點資料 (僅保留主站點，排除出口/入口)
+                State.mrtStations = State.mrtGeojsonData.features.filter(f =>
                     f.geometry.type === 'Point' &&
                     f.properties.stop_type === 'station'
                 );
 
-                // 3. 設置滑鼠監聽
-                State.map.on('mousemove', (e) => this.highlightNearestStation(e.latlng));
+                // 觸發重新渲染列表，因為現在有了捷運站資訊
+                UI.renderList();
+            } catch (e) {
+                console.error('載入 MRT 資料失敗:', e);
+                return;
+            }
+        }
 
-                // 4. 初始化高亮層
-                State.mrtHighlightLayer.addTo(State.map);
+        // 2. 渲染捷運線 (如果有地圖且尚未渲染的話)
+        if (State.map && !State.mrtRoutesRendered) {
+            const data = State.mrtGeojsonData;
+            L.geoJSON(data, {
+                filter: f => f.geometry.type.includes('LineString'),
+                style: f => {
+                    const name = (f.properties.name || '').toLowerCase();
+                    const colors = (f.properties.station_colors || '').toLowerCase();
+                    let color = '#748477';
+
+                    for (const [key, val] of Object.entries(CONFIG.MRT.NAME_COLORS)) {
+                        if (name.includes(key)) {
+                            color = val;
+                            break;
+                        }
+                    }
+
+                    if (color === '#748477') {
+                        if (colors.includes('red')) color = CONFIG.MRT.COLORS.NS;
+                        else if (colors.includes('green')) color = CONFIG.MRT.COLORS.EW;
+                        else if (colors.includes('purple')) color = CONFIG.MRT.COLORS.NE;
+                        else if (colors.includes('yellow') || colors.includes('orange')) color = CONFIG.MRT.COLORS.CC;
+                        else if (colors.includes('blue')) color = CONFIG.MRT.COLORS.DT;
+                        else if (colors.includes('brown')) color = CONFIG.MRT.COLORS.TE;
+                    }
+
+                    return { color, weight: 2, opacity: 0.5 };
+                }
+            }).addTo(State.map);
+
+            // 設置滑鼠監聽
+            State.map.on('mousemove', (e) => this.highlightNearestStation(e.latlng));
+            // 初始化高亮層
+            State.mrtHighlightLayer.addTo(State.map);
+
+            State.mrtRoutesRendered = true;
+        }
+    },
+
+    getNearestStation(lat, lon) {
+        if (!State.mrtStations.length || !lat || !lon) return null;
+
+        let nearest = null;
+        let minDist = Infinity;
+        const hotelLatLng = L.latLng(lat, lon);
+
+        State.mrtStations.forEach(station => {
+            const stationLatLng = L.latLng(station.geometry.coordinates[1], station.geometry.coordinates[0]);
+            const dist = hotelLatLng.distanceTo(stationLatLng);
+            if (dist < minDist) {
+                minDist = dist;
+                nearest = station;
+            }
+        });
+
+        if (nearest) {
+            const codeString = nearest.properties['station_codes'] || '';
+            const codes = codeString.split(/[\/\,\s\-]+/).filter(Boolean).map(c => c.trim().toUpperCase());
+            const nameZh = nearest.properties['name_zh-Hans'] || nearest.properties['name'] || '未知站名';
+
+            // 建立每個代碼對應的顏色
+            const codesWithColors = codes.map(c => {
+                const linePrefix = c.substring(0, 2);
+                return {
+                    code: c,
+                    color: CONFIG.MRT.COLORS[linePrefix] || '#748477'
+                };
             });
+
+            return {
+                name: nameZh,
+                code: codeString,
+                individualCodes: codesWithColors,
+                distance: minDist,
+                colors: [...new Set(codesWithColors.map(cw => cw.color))]
+            };
+        }
+        return null;
+    },
+
+    getStationColors(codesString) {
+        if (!codesString) return ['#748477'];
+        const codes = codesString.split(/[\/\,\s\-]+/).filter(Boolean).map(c => c.trim().substring(0, 2).toUpperCase());
+        const colors = codes
+            .filter(c => CONFIG.MRT.COLORS[c])
+            .map(c => CONFIG.MRT.COLORS[c]);
+        return colors.length > 0 ? [...new Set(colors)] : ['#748477'];
+    },
+
+    getStationColorStyle(colors) {
+        if (!colors || colors.length === 0) return 'color: #748477';
+        if (colors.length === 1) {
+            return `color: ${colors[0]}`;
+        } else {
+            // 使用「硬停點」漸層避免顏色混濁
+            const count = colors.length;
+            const stops = [];
+            for (let i = 0; i < count; i++) {
+                const start = (i / count) * 100;
+                const end = ((i + 1) / count) * 100;
+                stops.push(`${colors[i]} ${start}%`, `${colors[i]} ${end}%`);
+            }
+            return `background: linear-gradient(to right, ${stops.join(', ')}); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-weight: 800; display: inline-block;`;
+        }
     },
 
     highlightNearestStation(latlng) {
@@ -218,17 +302,7 @@ const MapService = {
             State.mrtHighlightLayer.clearLayers();
 
             // 取得站點顏色
-            const getStationColors = (codesString) => {
-                if (!codesString) return ['#ffffff'];
-                // 修正分割符號，加入灰階/橫線 (-)
-                const codes = codesString.split(/[\/\,\s\-]+/).filter(Boolean).map(c => c.trim().substring(0, 2).toUpperCase());
-                const colors = codes
-                    .filter(c => CONFIG.MRT.COLORS[c])
-                    .map(c => CONFIG.MRT.COLORS[c]);
-                return [...new Set(colors)];
-            };
-
-            const colors = getStationColors(code);
+            const colors = this.getStationColors(code);
             let backgroundStyle = '#ffffff';
 
             if (colors.length === 1) {
@@ -301,6 +375,40 @@ const MapService = {
                             <span class="bg-blue-50 text-blue-700 text-xs px-1.5 py-0.5 rounded font-bold">$${h.price.toLocaleString()}</span>
                         </div>
                         <div class="text-sm text-slate-600 mt-1">${h.size} m²</div>
+                        ${(() => {
+                        const coords = (h.lat && h.lon) ? { lat: h.lat, lon: h.lon } : State.coordsCache[h.name];
+                        if (!coords) return '';
+                        const nearest = MapService.getNearestStation(coords.lat, coords.lon);
+                        if (!nearest) return '';
+
+                        const nameStyle = MapService.getStationColorStyle(nearest.colors);
+
+                        // 建立代碼徽章
+                        const badges = nearest.individualCodes.map(cw =>
+                            `<span style="background: ${cw.color}; color: white; padding: 0 4px; border-radius: 4px; margin-right: 2px; font-weight: bold; font-family: monospace;">${cw.code}</span>`
+                        ).join('');
+
+                        // 建立圖示漸層
+                        let iconBg = nearest.colors[0];
+                        if (nearest.colors.length > 1) {
+                            const stops = [];
+                            nearest.colors.forEach((c, i) => {
+                                const start = (i / nearest.colors.length) * 100;
+                                const end = ((i + 1) / nearest.colors.length) * 100;
+                                stops.push(`${c} ${start}%`, `${c} ${end}%`);
+                            });
+                            iconBg = `linear-gradient(to bottom, ${stops.join(', ')})`;
+                        }
+
+                        return `
+                                <div class="text-[10px] mt-1 flex items-center flex-wrap gap-y-1">
+                                    <svg class="w-3 h-3 mr-1 flex-shrink-0" fill="black" viewBox="0 0 24 24"><path d="M12 2c-4 0-8 .5-8 4v9.5C4 17.43 5.57 19 7.5 19L6 20.5v.5h12v-.5L16.5 19c1.93 0 3.5-1.57 3.5-3.5V6c0-3.5-4-4-8-4zM7.5 17c-.83 0-1.5-.67-1.5-1.5S6.67 14 7.5 14s1.5.67 1.5 1.5S8.33 17 7.5 17zm3.5-6H6V6h5v5zm5.5 6c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm2.5-6h-5V6h5v5z"/></svg>
+                                    <span style="${nameStyle}" class="mr-1.5">${nearest.name}</span>
+                                    <span class="flex items-center mr-1.5">${badges}</span>
+                                    <span class="text-slate-400 font-medium">${Math.round(nearest.distance)}m</span>
+                                </div>
+                            `;
+                    })()}
                         ${h.note ? `<div class="text-xs italic bg-slate-50 p-1.5 rounded mt-1 border">${h.note}</div>` : ''}
                         <a href="https://www.google.com/maps/search/${encodeURIComponent(h.name + ' Singapore')}" target="_blank" class="block w-full text-center bg-blue-600 !text-white text-[10px] py-1.5 rounded mt-2 font-bold">查看地圖</a>
                     </div>
@@ -461,6 +569,8 @@ const UI = {
         patModal: document.getElementById('pat-modal'),
         editModal: document.getElementById('edit-modal'),
         editTagsContainer: document.getElementById('edit-tags-container'),
+        mrtDistanceRange: document.getElementById('mrtDistanceRange'),
+        mrtDistanceDisplay: document.getElementById('mrtDistanceDisplay'),
         toast: document.getElementById('toast'),
         toastContent: document.getElementById('toast-content')
     },
@@ -469,6 +579,7 @@ const UI = {
         this.bindEvents();
         this.updateLoginState();
         this.updatePriceDisplay(); // 初始化時更新一次價格顯示
+        this.updateMrtDistanceDisplay(); // 初始化時更新一次捷運距離顯示
         this.filterHotels();
     },
 
@@ -485,17 +596,30 @@ const UI = {
         }
     },
 
+    updateMrtDistanceDisplay() {
+        const el = this.elements.mrtDistanceRange;
+        const display = this.elements.mrtDistanceDisplay;
+        if (!el || !display) return;
+        const max = parseInt(el.max);
+        const current = parseInt(el.value);
+
+        if (current === max) {
+            display.textContent = '不限距離';
+        } else {
+            display.textContent = `${current}m 內`;
+        }
+    },
+
     bindEvents() {
         // 篩選器監聽
-        const filters = ['priceRange', 'sizeFilter', 'cancelableOnly', 'safeAreaFilter', 'goodSoundFilter', 'realBedFilter', 'plentyOutletsFilter', 'wifiFilter', 'poolFilter', 'washerFilter'];
+        const filters = ['priceRange', 'mrtDistanceRange', 'sizeFilter', 'cancelableOnly', 'safeAreaFilter', 'goodSoundFilter', 'realBedFilter', 'plentyOutletsFilter', 'wifiFilter', 'poolFilter', 'washerFilter'];
         filters.forEach(id => {
             const el = document.getElementById(id);
-            if (el) {
-                el.addEventListener(id === 'priceRange' ? 'input' : 'change', () => {
-                    if (id === 'priceRange') this.updatePriceDisplay();
-                    this.filterHotels();
-                });
-            }
+            if (el) el.addEventListener('input', () => {
+                if (id === 'priceRange') this.updatePriceDisplay();
+                if (id === 'mrtDistanceRange') this.updateMrtDistanceDisplay();
+                this.filterHotels();
+            });
         });
 
         // 檢視切換
@@ -600,12 +724,26 @@ const UI = {
     filterHotels() {
         const maxPrice = parseInt(this.elements.priceRange.value);
         const isPriceUnlimited = maxPrice === parseInt(this.elements.priceRange.max);
+        const maxMrtDist = parseInt(this.elements.mrtDistanceRange.value);
+        const isMrtUnlimited = maxMrtDist === parseInt(this.elements.mrtDistanceRange.max);
         const minSize = parseInt(this.elements.sizeFilter.value);
 
         State.currentFilteredHotels = hotels.filter(h => {
             // 基本預算與空間過濾
             if (!isPriceUnlimited && h.price > maxPrice) return false;
             if (minSize > 0 && h.size < minSize) return false;
+
+            // 捷運距離過濾
+            if (!isMrtUnlimited) {
+                const coords = (h.lat && h.lon) ? { lat: h.lat, lon: h.lon } : State.coordsCache[h.name];
+                if (coords) {
+                    const nearest = MapService.getNearestStation(coords.lat, coords.lon);
+                    if (!nearest || nearest.distance > maxMrtDist) return false;
+                } else if (maxMrtDist < 1000) {
+                    // 如果沒有座標且要求的距離非常短，保守起見先隱藏
+                    return false;
+                }
+            }
 
             // 動態標籤過濾：所有屬性現在均為 True = 正面/良好
             for (const tag of CONFIG.ALL_TAGS) {
@@ -682,7 +820,42 @@ const UI = {
                         <span class="bg-blue-50 text-blue-700 text-sm px-2 py-1 rounded font-medium">$${h.price.toLocaleString()}</span>
                     </div>
                     <div class="space-y-2 mt-4">
-                        <div class="flex items-center text-sm text-slate-800 font-medium"><svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"></path></svg>${h.size > 0 ? h.size + ' 平方公尺' : '未提供空間資訊'}</div>
+                        <div class="flex items-center text-sm text-slate-800 font-medium">
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"></path></svg>
+                            ${h.size > 0 ? h.size + ' 平方公尺' : '未提供空間資訊'}
+                        </div>
+                        ${(() => {
+                    const coords = (h.lat && h.lon) ? { lat: h.lat, lon: h.lon } : State.coordsCache[h.name];
+                    if (!coords) return '';
+                    const nearest = MapService.getNearestStation(coords.lat, coords.lon);
+                    if (!nearest) return '';
+
+                    const nameStyle = MapService.getStationColorStyle(nearest.colors);
+
+                    const badges = nearest.individualCodes.map(cw =>
+                        `<span style="background: ${cw.color}; color: white; padding: 1px 6px; border-radius: 4px; margin-right: 3px; font-weight: bold; font-family: monospace; font-size: 11px;">${cw.code}</span>`
+                    ).join('');
+
+                    let iconBg = nearest.colors[0];
+                    if (nearest.colors.length > 1) {
+                        const stops = [];
+                        nearest.colors.forEach((c, i) => {
+                            const start = (i / nearest.colors.length) * 100;
+                            const end = ((i + 1) / nearest.colors.length) * 100;
+                            stops.push(`${c} ${start}%`, `${c} ${end}%`);
+                        });
+                        iconBg = `linear-gradient(to bottom, ${stops.join(', ')})`;
+                    }
+
+                    return `
+                                <div class="flex items-center flex-wrap gap-y-1.5 text-sm font-medium">
+                                   <svg class="w-4 h-4 mr-2 flex-shrink-0" fill="black" viewBox="0 0 24 24"><path d="M12 2c-4 0-8 .5-8 4v9.5C4 17.43 5.57 19 7.5 19L6 20.5v.5h12v-.5L16.5 19c1.93 0 3.5-1.57 3.5-3.5V6c0-3.5-4-4-8-4zM7.5 17c-.83 0-1.5-.67-1.5-1.5S6.67 14 7.5 14s1.5.67 1.5 1.5S8.33 17 7.5 17zm3.5-6H6V6h5v5zm5.5 6c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm2.5-6h-5V6h5v5z"/></svg>
+                                   <span style="${nameStyle}" class="mr-2">${nearest.name}</span>
+                                   <span class="flex items-center mr-2">${badges}</span>
+                                   <span class="text-slate-400 font-bold text-xs">直線距離 ${Math.round(nearest.distance)}m</span>
+                                </div>
+                            `;
+                })()}
                         <hr class="border-slate-100 my-2">
                         <div class="space-y-2">${tagHTML}</div>
                     </div>
@@ -903,6 +1076,7 @@ const UI = {
  * --- 初始化 ---
  */
 UI.init();
+MapService.loadMRTLines();
 MapService.geocodeAll();
 
 // 啟動更新檢查
