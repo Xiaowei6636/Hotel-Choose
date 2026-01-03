@@ -101,5 +101,5 @@ graph TD
 - 必須尊重 Nominatim 的 Rate Limit (`delay`)。
 
 ---
-*最後更新日期: 2026-01-02*
+*此文檔最後更新日期: 2026-01-02*
 *文件撰寫者: Antigravity*

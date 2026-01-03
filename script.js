@@ -370,9 +370,9 @@ const MapService = {
                 const isMultiple = group.hotels.length > 1;
                 content += `
                     <div class="${i > 0 ? 'mt-3 pt-3 border-t' : ''}">
-                        <div class="flex justify-between items-start gap-2">
-                            <h4 class="${isMultiple ? 'text-sm' : 'text-lg'} font-bold">${h.name}</h4>
-                            <span class="bg-blue-50 text-blue-700 text-xs px-1.5 py-0.5 rounded font-bold">$${h.price.toLocaleString()}</span>
+                        <div class="flex justify-between items-start gap-4">
+                            <h4 class="${isMultiple ? 'text-sm' : 'text-lg'} font-bold leading-snug">${h.name}</h4>
+                            <span class="bg-blue-50 text-blue-700 text-xs px-1.5 py-0.5 rounded font-bold flex-shrink-0 mt-0.5">$${h.price.toLocaleString()}</span>
                         </div>
                         <div class="flex items-center text-sm text-slate-600 mt-1 font-medium">
                             <svg class="w-4 h-4 mr-1.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"></path></svg>
@@ -818,9 +818,9 @@ const UI = {
 
             card.innerHTML = `
                 <div class="p-5 flex-grow">
-                    <div class="flex justify-between items-start mb-2">
-                        <h3 class="text-xl font-bold text-slate-800">${h.name}</h3>
-                        <span class="bg-blue-50 text-blue-700 text-sm px-2 py-1 rounded font-medium">$${h.price.toLocaleString()}</span>
+                    <div class="flex justify-between items-start gap-4 mb-2">
+                        <h3 class="text-xl font-bold text-slate-800 leading-snug">${h.name}</h3>
+                        <span class="bg-blue-50 text-blue-700 text-sm px-2 py-1 rounded font-bold flex-shrink-0 mt-0.5">$${h.price.toLocaleString()}</span>
                     </div>
                     <div class="space-y-2 mt-4">
                         <div class="flex items-center text-sm text-slate-800 font-medium">
