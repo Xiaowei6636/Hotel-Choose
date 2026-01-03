@@ -1,75 +1,105 @@
 # 開發與維護指南 (Development & Maintenance Guide)
 
-本文件旨在幫助開發者理解「新加坡飯店挑選助手」的程式架構，以及如何擴充功能或進行日常維護。
+本文件旨在幫助開發者深入理解「新加坡飯店挑選助手」的程式架構、核心功能實作方式，以及如何有效地擴充功能或進行日常維護。
 
-## 1. 系統架構概要
+## 1. 專案結構 (Project Structure)
 
-本專案採用純前端架構 (Vanilla JS + Tailwind CSS + Leaflet)，代碼已進行模組化重構：
+### 1.1 目錄樹狀圖
+```text
+.
+├── index.html          # 應用程式主入口與 UI 結構
+├── style.css           # 自定義樣式與 Tailwind 擴充
+├── script.js           # 核心邏輯 (State, Service, UI 渲染)
+├── data.js             # 飯店資料庫 (格式化導出的 JS 陣列)
+├── docs/               # 相關文件
+│   └── DEVELOPMENT.md  # 本開發者文件
+└── icon.png            # 應用程式圖示
+```
 
-- `CONFIG`: 儲存全域設定與標籤定義（如 `ALL_TAGS`）。
-- `State`: 儲存執行時期的狀態（如地圖實例、過濾後的飯店列表、座標快取）。
-- `Utils`: 共通工具函式（如 延遲、快取存取）。
-- `MapService`: 處理地圖初始化、標記更新、以及 Nominatim 地理編碼邏輯。
-- `GitHubService`: 封裝 GitHub API 互動，包含登入驗證與建立 PR。
-- `UI`: 處理所有 DOM 操作、事件綁定與頁面渲染。
-
-## 2. 如何新增過濾標籤 (Tags)
-
-1.  **修改 `data.js`**: 在飯店資料中加入新屬性。務必遵循「**True = 正面/良好**」原則。
-2.  **修改 `index.html`**: 在過濾器區域新增對應的 `checkbox` filter，並賦予一個唯一的 `id`。
-3.  **修改 `script.js`**:
-    *   在 `CONFIG.ALL_TAGS` 數組中新增定義物件。
-    *   **屬性定義說明**：
-        *   `key`: 對應 `data.js` 中的屬性名稱。
-        *   `label`: 當資料為 `true` 時，卡片上顯示的文字。
-        *   `negativeLabel`: (可選) 當資料為 `false` 時，卡片上顯示的警告文字。若有定義此欄位，卡片會以橘色加粗顯示。
-        *   `type`: `positive` (一般良好資訊) 或 `amenity` (便利設施，如 WiFi)。
-        *   `filterId`: 對應 `index.html` 中的 `checkbox` ID。
-    *   **備註**：系統會根據 `filterId` 自動處理過濾與渲染，無需額外修改過濾邏輯。
-
-## 3. 資料邏輯與命名規範 (Data Logic)
-
-本專案自 2025-12-27 起統一採用「**True = 正向/良好**」邏輯。維護 `data.js` 時請遵守以下規範：
-
-- **命名風格**: 採用駝峰式命名 (CamelCase)，如 `isSafeLocation`, `hasWiFi`。
-- **正向原則**: 屬性應代表「好」的情況。
-    - ✅ 使用 `isSafeLocation` (環境安全) 而非 `isRedLightDistrict` (靠近紅燈區)。
-    - ✅ 使用 `isSoundproof` (隔音好) 而非 `isPoorSoundproofing` (隔音差)。
-    - ✅ 使用 `hasPlentyOutlets` (插座足) 而非 `hasFewOutlets` (插座少)。
-- **顯示控制**: 若屬性本身是「非不良情況」的描述（如：非靠近紅燈區），請在 `ALL_TAGS` 的 `label` 寫入「非靠近紅燈區」，並在 `negativeLabel` 寫入「靠近紅燈區」。
-
-## 4. GitHub 編輯機制 (PR Workflow)
-
-編輯功能的運作流程如下：
-1.  使用者登入 GitHub PAT。
-2.  **編輯飯店**: 點擊飯店卡片，修改資料後按儲存。
-3.  **新增飯店**: 點擊頁首的「新增飯店」按鈕。
-4.  **刪除飯店**: 點擊飯店卡片後，在彈窗左下角按「刪除飯店」。
-5.  按下執行後，`GitHubService` 會：
-    *   讀取目前 `data.js` 的內容。
-    *   透過 `new Function()` 解析內容，根據操作 (add/update/delete) 修改資料數組。
-    *   將更新後的資料重新串接回 `export const hotels = ...` 格式。
-    *   建立新分支並推送變更。
-    *   建立 Pull Request。
-
-### 注意事項：
-- **安全性**: GitHub PAT 僅存儲於使用者的瀏覽器 Cookie 中，不會上傳至任何伺服器。
-- **資料完整性**: 寫入 `data.js` 時使用了 `new Function()` 解析字串，確保能保留原始檔案中的非 JSON 內容（如註釋），但在維護 `data.js` 時，請確保其語法符合標準 JS 格式。
-
-## 5. 地圖與座標處理
-
-- **快取**: 座標會存存在 `localStorage` 的 `hotel_coords_cache_v1` 中。
-- **Nominatim 政策**: 地圖查詢使用 OpenStreetMap 的 Nominatim API，須遵守每秒最多 1 次請求的規範。程式中已內建 `delay(1200)` 以確保合規。
-- **手動座標**: 若飯店在 `data.js` 中有提供 `lat` 與 `lon`，系統會優先使用手動座標，跳過 API 查詢。
-- **捷運 (MRT) 標示**: 
-    - 捷運線與站點資訊來自 `sgraildata` GeoJSON。
-    - **站點顏色**: 系統會解析 `station_codes`（如 `NS1/EW24` 或 `NS24-NE6-CC1`），並根據 `CONFIG.MRT.COLORS` 自動著色。
-    - **轉乘站 (Interchange)**: 若站點包含多條路線，會以 `linear-gradient` 漸層方式同時顯示多種顏色。
-
-## 6. 常見問題與除錯
-
-- **座標查不到**: 某些飯店名稱可能在 OSM 中找不到。開發者可以透過「三連擊標題」開啟偵錯面板，手動測試搜尋路徑或在 `data.js` 直接補上座標。
-- **PR 建立失敗**: 通常是因為 GitHub PAT 權限不足（需 Contents: Read & Write, Pull requests: Read & Write）。
+### 1.2 技術棧 (Tech Stack)
+- **基礎**: HTML5, Vanilla JavaScript (ES6+), CSS3.
+- **UI 樣式**: Tailwind CSS (CDN 下載).
+- **地圖服務**: [Leaflet.js](https://leafletjs.org/) & [OpenStreetMap/CartoDB](https://carto.com/basemaps).
+- **GitHub 互動**: [@octokit/core](https://github.com/octokit/core.js) (處理 PR).
+- **其他依賴**: [js-cookie](https://github.com/js-cookie/js-cookie) (處理 Token 存儲).
 
 ---
-*最後更新日期: 2026-01-01*
+
+## 2. 核心架構詳解 (Implementation Details)
+
+本專案採用**模組化單一檔案架構**，為了提升維護性，`script.js` 被劃分為以下幾個邏輯區塊：
+
+### 2.1 狀態管理 (State Management)
+全域變數 `State` 物件集中管理執行時期的數據：
+- `currentFilteredHotels`: 存放過濾後的飯店子集，是所有 UI 渲染的數據源。
+- `coordsCache`: 存儲從 Nominatim 獲取的座標，減少 API 調用。
+- `mrtStations`: 存放解析後的捷運站地理資訊。
+
+### 2.2 過濾機制 (Filtering Engine)
+過濾邏輯高度依赖 `CONFIG.ALL_TAGS` 與 `UI.filterHotels()`：
+- **宣告式過濾**: 在 `CONFIG.ALL_TAGS` 定義一個標籤後，`UI.filterHotels()` 會自動循環該陣列，檢查對應的 `checkbox` 狀態。
+- **正向邏輯**: 遵循「**True = 正面/良好**」原則。如果標籤被勾選，飯店資料中該屬性必須為 `true` 才會顯示。
+
+### 2.3 GitHub 編輯自動化流 (PR Workflow)
+這是專案最複雜的部分，透過 `GitHubService.createPR()` 實現：
+```mermaid
+graph TD
+    A[點擊儲存/刪除] --> B{檢查 Token & 權限}
+    B -->|OK| C[獲取 data.js 原始檔案字串]
+    C --> D[使用 new Function 解析資料陣列]
+    D --> E[執行 Add/Update/Delete 陣列操作]
+    E --> F[將新陣列重新拼接為 JS 檔案內容字串]
+    F --> G[Octokit 建立新分支]
+    G --> H[推送變更至新分支]
+    H --> I[建立 Pull Request 至 main 分支]
+    I --> J[本地立即更新 State 與 UI]
+```
+
+---
+
+## 3. 開發指引 (Expansion Guide)
+
+### 3.1 如何新增一個過濾維度 (Filtering Tag)
+假設要新增「是否有浴缸 (`hasBathtub`)」：
+1.  **修改 `data.js`**: 為飯店新增 `hasBathtub: true` 或 `false`。
+2.  **修改 `index.html`**: 在過濾器面板新增 `<input type="checkbox" id="bathtubFilter">`。
+3.  **修改 `script.js`**: 在 `CONFIG.ALL_TAGS` 新增：
+    ```javascript
+    { key: 'hasBathtub', label: '有浴缸', filterId: 'bathtubFilter', type: 'amenity' }
+    ```
+4.  **自動化效益**: 系統會自動為卡片渲染「有浴缸」標籤，且過濾器會立即生效。
+
+### 3.2 如何新增飯店屬性 (New Data Field)
+若要新增不屬於標籤的資訊（如：飯店電話 `phone`）：
+1.  **修改 `UI.openEditModal()`**: 在 Modal 中新增電話輸入欄位。
+2.  **修改 `UI.submitPR()`**: 從 DOM 讀取電話值並加入 `data` 物件。
+3.  **修改 `UI.renderList()`**: 在卡片範本中顯示電話。
+
+### 3.3 自訂地圖彈窗 (Map Popup)
+地圖彈窗內容位於 `MapService.updateMarkers()` 的 `content` 字串中。
+- 若需調整彈窗樣式，可以直接修改該處的 HTML/Tailwind 類別。
+- 捷運距離資訊也是在此處動態生成的。
+
+---
+
+## 4. 設計規範與維護準則 (Coding Standards)
+
+為了確保多人協作與長期維護，請務必遵守：
+
+### 4.1 命名與邏輯
+- **True = 好事**: 命名要反映「優點」。
+  - ✅ `isSoundproof` (隔音好)
+  - ❌ `isNoisy` (噪音大)
+- **CSS 類別**: 優先使用 Tailwind CSS 類別。若需自訂樣式，請定義在 `style.css` 並於 HTML 中調用。
+
+### 4.2 資料更新
+- **捷運資料**: 來源為外部 GeoJSON。若新加坡捷運有新線開通，可能需要調整 `CONFIG.MRT.NAME_COLORS` 與 `NAME_COLORS`。
+- **資料庫更新**: `data.js` 必須保持 JS 語法格式，不可僅存為純 JSON。
+
+### 4.3 異步處理
+- 所有的 API 請求（Nominatim, GitHub）必須使用 `async/await` 配搭 `try...catch` 進行錯誤處理。
+- 必須尊重 Nominatim 的 Rate Limit (`delay`)。
+
+---
+*最後更新日期: 2026-01-02*
+*文件撰寫者: Antigravity*
