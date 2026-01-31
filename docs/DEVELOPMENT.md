@@ -80,6 +80,12 @@ graph TD
 - 若需調整彈窗樣式，可以直接修改該處的 HTML/Tailwind 類別。
 - 捷運距離資訊也是在此處動態生成的。
 
+### 3.4 捷運站互動 (MRT Interaction)
+當使用者在飯店卡片點擊捷運站名稱時，系統會執行以下流程：
+1.  **自動切換檢視**: 若目前為列表檢視，自動切換至地圖檢視。
+2.  **定位與縮放**: 使用 `State.map.setView` 將地圖中心移至該捷運站座標，並縮放至 17 層級。
+3.  **動態高亮**: 透過 `MapService.highlightNearestStation` 在地圖上即時顯示該捷運站的標記與名稱。
+
 ---
 
 ## 4. 設計規範與維護準則 (Coding Standards)
@@ -101,5 +107,5 @@ graph TD
 - 必須尊重 Nominatim 的 Rate Limit (`delay`)。
 
 ---
-*此文檔最後更新日期: 2026-01-02*
+*此文檔最後更新日期: 2026-01-03*
 *文件撰寫者: Antigravity*

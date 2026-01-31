@@ -60,6 +60,7 @@ const State = {
     mrtHighlightLayer: L.layerGroup(),
     pendingEditIndex: null,
     dataSha: null,
+    markerGroups: {},
 };
 
 /**
@@ -240,7 +241,9 @@ const MapService = {
                 code: codeString,
                 individualCodes: codesWithColors,
                 distance: minDist,
-                colors: [...new Set(codesWithColors.map(cw => cw.color))]
+                colors: [...new Set(codesWithColors.map(cw => cw.color))],
+                lat: nearest.geometry.coordinates[1],
+                lon: nearest.geometry.coordinates[0]
             };
         }
         return null;
@@ -347,6 +350,7 @@ const MapService = {
     updateMarkers() {
         if (!State.map) return;
         State.markerLayer.clearLayers();
+        State.markerGroups = {};
 
         const groups = {};
         State.currentFilteredHotels.forEach(h => {
@@ -359,7 +363,9 @@ const MapService = {
         });
 
         Object.values(groups).forEach(group => {
+            const key = `${group.coords.lat.toFixed(6)},${group.coords.lon.toFixed(6)}`;
             const marker = L.marker([group.coords.lat, group.coords.lon]);
+            State.markerGroups[key] = marker;
             let content = `<div class="p-1 min-w-[200px] max-w-[280px] max-h-[400px] overflow-y-auto">`;
 
             if (group.hotels.length > 1) {
@@ -665,6 +671,11 @@ const UI = {
         this.elements.deleteHotelBtn.addEventListener('click', () => this.handleDelete());
 
         this.elements.grid.addEventListener('click', (e) => {
+            // 核心邏輯：如果點擊的是具有互動功能的子元素，則不觸發編輯視窗
+            if (e.target.closest('.hotel-title') || e.target.closest('.mrt-station-name') || e.target.closest('a')) {
+                return;
+            }
+
             const card = e.target.closest('.hotel-card');
             if (card && card.dataset.index !== undefined) {
                 const index = parseInt(card.dataset.index);
@@ -819,7 +830,10 @@ const UI = {
             card.innerHTML = `
                 <div class="p-5 flex-grow">
                     <div class="flex justify-between items-start gap-4 mb-2">
-                        <h3 class="text-xl font-bold text-slate-800 leading-snug">${h.name}</h3>
+                        <h3 class="hotel-title text-xl font-bold text-slate-800 leading-snug cursor-pointer" 
+                            onclick="event.stopPropagation(); UI.focusOnHotelByName('${h.name.replace(/'/g, "\\'")}')">
+                            ${h.name}
+                        </h3>
                         <span class="bg-blue-50 text-blue-700 text-sm px-2 py-1 rounded font-bold flex-shrink-0 mt-0.5">$${h.price.toLocaleString()}</span>
                     </div>
                     <div class="space-y-2 mt-4">
@@ -853,7 +867,7 @@ const UI = {
                     return `
                                 <div class="flex items-center flex-wrap gap-y-1.5 text-sm font-medium">
                                    <svg class="w-4 h-4 mr-2 flex-shrink-0" fill="black" viewBox="0 0 24 24"><path d="M12 2c-4 0-8 .5-8 4v9.5C4 17.43 5.57 19 7.5 19L6 20.5v.5h12v-.5L16.5 19c1.93 0 3.5-1.57 3.5-3.5V6c0-3.5-4-4-8-4zM7.5 17c-.83 0-1.5-.67-1.5-1.5S6.67 14 7.5 14s1.5.67 1.5 1.5S8.33 17 7.5 17zm3.5-6H6V6h5v5zm5.5 6c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm2.5-6h-5V6h5v5z"/></svg>
-                                   <span style="${nameStyle}" class="mr-2">${nearest.name}</span>
+                                    <span style="${nameStyle}" class="mrt-station-name mr-2 cursor-pointer" onclick="event.stopPropagation(); UI.focusOnMrt(${nearest.lat}, ${nearest.lon})">${nearest.name}</span>
                                    <span class="flex items-center mr-2">${badges}</span>
                                    <span class="text-slate-400 font-bold">直線距離 ${Math.round(nearest.distance)}m</span>
                                 </div>
@@ -1028,6 +1042,62 @@ const UI = {
         }
     },
 
+    focusOnMrt(lat, lon) {
+        if (!State.isMapView) {
+            this.toggleMapView();
+        }
+
+        // 遞迴檢查地圖是否已載入完成（解決第一次開啟時的延遲問題）
+        const checkAndSet = (attempts) => {
+            if (State.map) {
+                State.map.setView([lat, lon], 17);
+                MapService.highlightNearestStation(L.latLng(lat, lon));
+            } else if (attempts > 0) {
+                setTimeout(() => checkAndSet(attempts - 1), 100);
+            }
+        };
+
+        checkAndSet(10); // 最多嘗試 1 秒
+    },
+
+    focusOnHotel(lat, lon) {
+        const wasInListView = !State.isMapView;
+        if (wasInListView) {
+            this.toggleMapView();
+        }
+
+        const key = `${lat.toFixed(6)},${lon.toFixed(6)}`;
+
+        // 遞迴檢查地圖與標記是否已載入完成
+        const checkAndSet = (attempts) => {
+            // 檢查地圖已初始化且標記已建立
+            if (State.map && State.markerGroups[key]) {
+                // 如果是剛從列表切換過來，多等一下下確保 updateMarkers 的清理動作已過
+                State.map.setView([lat, lon], 17);
+                setTimeout(() => {
+                    State.markerGroups[key].openPopup();
+                }, 100);
+            } else if (attempts > 0) {
+                setTimeout(() => checkAndSet(attempts - 1), 100);
+            }
+        };
+
+        // 如果剛切換視圖，延後開始檢查，避開 toggleMapView 內部的 100ms updateMarkers
+        setTimeout(() => {
+            checkAndSet(15);
+        }, wasInListView ? 250 : 0);
+    },
+
+    focusOnHotelByName(name) {
+        const hotel = hotels.find(h => h.name === name);
+        let coords = (hotel && hotel.lat && hotel.lon) ? { lat: hotel.lat, lon: hotel.lon } : State.coordsCache[name];
+        if (coords) {
+            this.focusOnHotel(coords.lat, coords.lon);
+        } else {
+            console.error(`找不到飯店 "${name}" 的座標資訊`);
+        }
+    },
+
     showToast(html, duration = 7000) {
         this.elements.toastContent.innerHTML = html;
         this.elements.toast.classList.add('show');
@@ -1085,3 +1155,6 @@ MapService.geocodeAll();
 // 啟動更新檢查
 GitHubService.checkForUpdates();
 setInterval(() => GitHubService.checkForUpdates(), 60000);
+
+// 將 UI 暴露給 window，以便 HTML 內的 onclick 調用
+window.UI = UI;

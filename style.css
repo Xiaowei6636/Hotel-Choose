@@ -89,3 +89,30 @@ body {
     box-sizing: border-box;
     transition: all 0.2s ease;
 }
+
+/* MRT Station Name Interactive Link */
+.mrt-station-name {
+    transition: border-color 0.2s ease, opacity 0.2s ease;
+    border-bottom: 1.5px solid transparent;
+    display: inline-block;
+    line-height: 1.1;
+}
+
+.mrt-station-name:hover {
+    border-bottom-color: #475569;
+    /* Slate-600 */
+    opacity: 0.8;
+}
+
+/* Hotel Title Interactive Link */
+.hotel-title {
+    transition: border-color 0.2s ease, opacity 0.2s ease;
+    border-bottom: 2px solid transparent;
+    display: inline-block;
+}
+
+.hotel-title:hover {
+    border-bottom-color: #1e293b;
+    /* Slate-800 */
+    opacity: 0.9;
+}
