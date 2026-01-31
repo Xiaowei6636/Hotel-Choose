@@ -271,7 +271,7 @@ const MapService = {
                 const end = ((i + 1) / count) * 100;
                 stops.push(`${colors[i]} ${start}%`, `${colors[i]} ${end}%`);
             }
-            return `background: linear-gradient(to right, ${stops.join(', ')}); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-weight: 800; display: inline-block;`;
+            return `background: linear-gradient(to right, ${stops.join(', ')}); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; font-weight: 800; display: inline-block;`;
         }
     },
 
@@ -366,22 +366,22 @@ const MapService = {
             const key = `${group.coords.lat.toFixed(6)},${group.coords.lon.toFixed(6)}`;
             const marker = L.marker([group.coords.lat, group.coords.lon]);
             State.markerGroups[key] = marker;
-            let content = `<div class="p-1 min-w-[200px] max-w-[280px] max-h-[400px] overflow-y-auto">`;
+            let content = `<div class="p-3 min-w-[240px] max-w-[300px] max-h-[450px] overflow-y-auto custom-scrollbar">`;
 
             if (group.hotels.length > 1) {
-                content += `<div class="sticky top-0 bg-white border-b mb-2 pb-2 z-10 font-bold text-sm text-blue-600">此處有 ${group.hotels.length} 間飯店</div>`;
+                content += `<div class="sticky top-0 bg-white/90 backdrop-blur-md border-b border-slate-100 mb-3 pb-2 z-10 font-bold text-xs text-blue-600 tracking-wide uppercase">此處有 ${group.hotels.length} 間飯店</div>`;
             }
 
             group.hotels.forEach((h, i) => {
                 const isMultiple = group.hotels.length > 1;
                 content += `
-                    <div class="${i > 0 ? 'mt-3 pt-3 border-t' : ''}">
-                        <div class="flex justify-between items-start gap-4">
-                            <h4 class="${isMultiple ? 'text-sm' : 'text-lg'} font-bold leading-snug">${h.name}</h4>
-                            <span class="bg-blue-50 text-blue-700 text-xs px-1.5 py-0.5 rounded font-bold flex-shrink-0 mt-0.5">$${h.price.toLocaleString()}</span>
+                    <div class="${i > 0 ? 'mt-4 pt-4 border-t border-slate-50' : ''}">
+                        <div class="flex justify-between items-start gap-4 mb-2">
+                            <h4 class="${isMultiple ? 'text-sm' : 'text-lg'} font-bold leading-tight text-slate-800">${h.name}</h4>
+                            <span class="bg-blue-50 text-blue-700 text-[11px] px-2 py-0.5 rounded-full font-bold flex-shrink-0">$${h.price.toLocaleString()}</span>
                         </div>
-                        <div class="flex items-center text-sm text-slate-600 mt-1 font-medium">
-                            <svg class="w-4 h-4 mr-1.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"></path></svg>
+                        <div class="flex items-center text-xs text-slate-500 mb-2 font-medium">
+                            <svg class="w-3.5 h-3.5 mr-1.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"></path></svg>
                             <span>${h.size > 0 ? h.size + ' m²' : '未提供'}</span>
                         </div>
                         ${(() => {
@@ -394,32 +394,20 @@ const MapService = {
 
                         // 建立代碼徽章
                         const badges = nearest.individualCodes.map(cw =>
-                            `<span style="background: ${cw.color}; color: white; padding: 0 4px; border-radius: 4px; margin-right: 2px; font-weight: bold; font-family: monospace;">${cw.code}</span>`
+                            `<span style="background: ${cw.color}; color: white; padding: 0 4px; border-radius: 4px; margin-right: 2px; font-weight: bold; font-family: monospace; font-size: 10px;">${cw.code}</span>`
                         ).join('');
 
-                        // 建立圖示漸層
-                        let iconBg = nearest.colors[0];
-                        if (nearest.colors.length > 1) {
-                            const stops = [];
-                            nearest.colors.forEach((c, i) => {
-                                const start = (i / nearest.colors.length) * 100;
-                                const end = ((i + 1) / nearest.colors.length) * 100;
-                                stops.push(`${c} ${start}%`, `${c} ${end}%`);
-                            });
-                            iconBg = `linear-gradient(to bottom, ${stops.join(', ')})`;
-                        }
-
                         return `
-                                <div class="text-sm mt-1 flex items-center flex-wrap gap-y-1 font-medium">
-                                    <svg class="w-4 h-4 mr-1.5 flex-shrink-0" fill="black" viewBox="0 0 24 24"><path d="M12 2c-4 0-8 .5-8 4v9.5C4 17.43 5.57 19 7.5 19L6 20.5v.5h12v-.5L16.5 19c1.93 0 3.5-1.57 3.5-3.5V6c0-3.5-4-4-8-4zM7.5 17c-.83 0-1.5-.67-1.5-1.5S6.67 14 7.5 14s1.5.67 1.5 1.5S8.33 17 7.5 17zm3.5-6H6V6h5v5zm5.5 6c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm2.5-6h-5V6h5v5z"/></svg>
+                                <div class="text-[11px] mt-2 flex items-center flex-wrap gap-y-1 font-semibold">
+                                    <svg class="w-3.5 h-3.5 mr-1.5 flex-shrink-0" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2c-4 0-8 .5-8 4v9.5C4 17.43 5.57 19 7.5 19L6 20.5v.5h12v-.5L16.5 19c1.93 0 3.5-1.57 3.5-3.5V6c0-3.5-4-4-8-4zM7.5 17c-.83 0-1.5-.67-1.5-1.5S6.67 14 7.5 14s1.5.67 1.5 1.5S8.33 17 7.5 17zm3.5-6H6V6h5v5zm5.5 6c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm2.5-6h-5V6h5v5z"/></svg>
                                     <span style="${nameStyle}" class="mr-1.5">${nearest.name}</span>
                                     <span class="flex items-center mr-1.5">${badges}</span>
-                                    <span class="text-slate-400">直線距離 ${Math.round(nearest.distance)}m</span>
+                                    <span class="text-slate-400">距離 ${Math.round(nearest.distance)}m</span>
                                 </div>
                             `;
                     })()}
-                        ${h.note ? `<div class="text-xs italic bg-slate-50 p-1.5 rounded mt-1 border">${h.note}</div>` : ''}
-                        <a href="https://www.google.com/maps/search/${encodeURIComponent(h.name + ' Singapore')}" target="_blank" class="block w-full text-center bg-blue-600 !text-white text-[10px] py-1.5 rounded mt-2 font-bold">查看地圖</a>
+                        ${h.note ? `<div class="text-[10px] italic bg-slate-50/80 p-2 rounded-lg mt-3 text-slate-500 border border-slate-100/50">${h.note}</div>` : ''}
+                        <a href="https://www.google.com/maps/search/${encodeURIComponent(h.name + ' Singapore')}" target="_blank" class="block w-full text-center bg-slate-900 text-white text-[10px] py-1.5 rounded-lg mt-3 font-bold hover:bg-black transition-colors">Google Maps 查看</a>
                     </div>
                 `;
             });
@@ -790,96 +778,103 @@ const UI = {
                 .sort((a, b) => {
                     const getPriority = (item) => {
                         const { tag, val } = item;
-                        // 1. 負面標籤優先 (如：靠近紅燈區)
                         if (val === false && tag.negativeLabel) return 1;
-                        // 2. 正面標籤次之 (如：環境安全、有 WiFi)
                         if (val === true) return 2;
-                        // 3. 無資訊或一般否定 (如：未提供資訊、WiFi: 無)
                         return 3;
                     };
                     return getPriority(a) - getPriority(b);
                 })
                 .map(({ tag, val }) => {
-                    let color = 'text-slate-400';
-                    let text = `${tag.label}: 未提供資訊`;
-                    let icon = 'M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z'; // Info icon
+                    let badgeClass = 'tag-badge-neutral';
+                    let text = `${tag.label}: 未提供`;
+                    let icon = 'M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z';
 
                     if (val === true) {
-                        // 正面/良好狀態：顯示正常標籤
-                        color = 'text-slate-800';
+                        badgeClass = 'tag-badge-positive';
                         text = tag.label;
-                        icon = 'M5 13l4 4L19 7'; // Check icon
+                        icon = 'M5 13l4 4L19 7';
                     } else if (val === false) {
-                        // 負面/警告狀態
                         if (tag.negativeLabel) {
-                            // 若有定義負面標籤（如：靠近紅燈區），則以警告顏色顯示
-                            color = 'text-amber-600 font-bold';
+                            badgeClass = 'tag-badge-negative font-bold';
                             text = tag.negativeLabel;
-                            icon = 'M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z'; // Warning
+                            icon = 'M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z';
                         } else {
-                            // 一般設施則顯示「無」
-                            color = 'text-slate-400';
+                            badgeClass = 'tag-badge-neutral opacity-60';
                             text = `${tag.label}: 無`;
-                            icon = 'M6 18L18 6M6 6l12 12'; // X icon
+                            icon = 'M6 18L18 6M6 6l12 12';
                         }
                     }
 
-                    return `<div class="flex items-start text-sm ${color}"><svg class="w-4 h-4 mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="${icon}"></path></svg><span>${text}</span></div>`;
+                    return `<div class="tag-badge ${badgeClass} text-[10px] py-0.5 px-2 rounded-md">
+                        <svg class="w-3 h-3 mr-1 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="${icon}"></path></svg>
+                        ${text}
+                    </div>`;
                 }).join('');
 
             card.innerHTML = `
-                <div class="p-5 flex-grow">
-                    <div class="flex justify-between items-start gap-4 mb-2">
-                        <h3 class="hotel-title text-xl font-bold text-slate-800 leading-snug cursor-pointer" 
+                <div class="p-6 flex-grow">
+                    <div class="flex justify-between items-start gap-4 mb-4">
+                        <h3 class="hotel-title text-xl font-bold text-slate-800 leading-tight cursor-pointer decoration-blue-500/30" 
                             onclick="event.stopPropagation(); UI.focusOnHotelByName('${h.name.replace(/'/g, "\\'")}')">
                             ${h.name}
                         </h3>
-                        <span class="bg-blue-50 text-blue-700 text-sm px-2 py-1 rounded font-bold flex-shrink-0 mt-0.5">$${h.price.toLocaleString()}</span>
+                        <div class="flex flex-col items-end">
+                            <span class="text-blue-600 text-xl font-extrabold">$${h.price.toLocaleString()}</span>
+                            <span class="text-[9px] text-slate-400 font-bold uppercase tracking-wider">Per Night</span>
+                        </div>
                     </div>
-                    <div class="space-y-2 mt-4">
-                        <div class="flex items-center text-sm text-slate-800 font-medium">
-                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"></path></svg>
-                            ${h.size > 0 ? h.size + ' 平方公尺' : '未提供空間資訊'}
+                    
+                    <div class="grid grid-cols-2 gap-3 mb-6">
+                        <div class="flex items-center p-2 rounded-xl bg-slate-50 border border-slate-100 shadow-sm">
+                            <div class="w-7 h-7 rounded-lg bg-white flex items-center justify-center shadow-sm mr-2.5">
+                                <svg class="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"></path></svg>
+                            </div>
+                            <div class="flex flex-col">
+                                <span class="text-[9px] text-slate-400 font-bold uppercase tracking-tight">Room Size</span>
+                                <span class="text-xs font-bold text-slate-700">${h.size > 0 ? h.size + ' m²' : 'N/A'}</span>
+                            </div>
                         </div>
                         ${(() => {
                     const coords = (h.lat && h.lon) ? { lat: h.lat, lon: h.lon } : State.coordsCache[h.name];
-                    if (!coords) return '';
+                    if (!coords) return '<div class="flex items-center p-2 rounded-xl bg-slate-50 border border-slate-100 shadow-sm opacity-50"><span class="text-[10px] font-bold text-slate-400">尚未定位</span></div>';
                     const nearest = MapService.getNearestStation(coords.lat, coords.lon);
-                    if (!nearest) return '';
+                    if (!nearest) return '<div class="flex items-center p-2 rounded-xl bg-slate-50 border border-slate-100 shadow-sm opacity-50"><span class="text-[10px] font-bold text-slate-400">無鄰近捷運</span></div>';
 
                     const nameStyle = MapService.getStationColorStyle(nearest.colors);
 
-                    const badges = nearest.individualCodes.map(cw =>
-                        `<span style="background: ${cw.color}; color: white; padding: 1px 6px; border-radius: 4px; margin-right: 3px; font-weight: bold; font-family: monospace; font-size: 11px;">${cw.code}</span>`
-                    ).join('');
-
-                    let iconBg = nearest.colors[0];
-                    if (nearest.colors.length > 1) {
-                        const stops = [];
-                        nearest.colors.forEach((c, i) => {
-                            const start = (i / nearest.colors.length) * 100;
-                            const end = ((i + 1) / nearest.colors.length) * 100;
-                            stops.push(`${c} ${start}%`, `${c} ${end}%`);
-                        });
-                        iconBg = `linear-gradient(to bottom, ${stops.join(', ')})`;
-                    }
-
                     return `
-                                <div class="flex items-center flex-wrap gap-y-1.5 text-sm font-medium">
-                                   <svg class="w-4 h-4 mr-2 flex-shrink-0" fill="black" viewBox="0 0 24 24"><path d="M12 2c-4 0-8 .5-8 4v9.5C4 17.43 5.57 19 7.5 19L6 20.5v.5h12v-.5L16.5 19c1.93 0 3.5-1.57 3.5-3.5V6c0-3.5-4-4-8-4zM7.5 17c-.83 0-1.5-.67-1.5-1.5S6.67 14 7.5 14s1.5.67 1.5 1.5S8.33 17 7.5 17zm3.5-6H6V6h5v5zm5.5 6c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm2.5-6h-5V6h5v5z"/></svg>
-                                    <span style="${nameStyle}" class="mrt-station-name mr-2 cursor-pointer" onclick="event.stopPropagation(); UI.focusOnMrt(${nearest.lat}, ${nearest.lon})">${nearest.name}</span>
-                                   <span class="flex items-center mr-2">${badges}</span>
-                                   <span class="text-slate-400 font-bold">直線距離 ${Math.round(nearest.distance)}m</span>
+                                <div class="flex items-center p-2 rounded-xl bg-slate-50 border border-slate-100 shadow-sm group hover:border-emerald-200 transition-colors" 
+                                     onclick="event.stopPropagation(); UI.focusOnMrt(${nearest.lat}, ${nearest.lon})">
+                                    <div class="w-7 h-7 rounded-lg bg-white flex items-center justify-center shadow-sm mr-2.5">
+                                        <svg class="w-4 h-4 text-emerald-500" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2c-4 0-8 .5-8 4v9.5C4 17.43 5.57 19 7.5 19L6 20.5v.5h12v-.5L16.5 19c1.93 0 3.5-1.57 3.5-3.5V6c0-3.5-4-4-8-4zM7.5 17c-.83 0-1.5-.67-1.5-1.5S6.67 14 7.5 14s1.5.67 1.5 1.5S8.33 17 7.5 17zm3.5-6H6V6h5v5zm5.5 6c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm2.5-6h-5V6h5v5z"/></svg>
+                                    </div>
+                                    <div class="flex flex-col">
+                                        <span class="text-[9px] text-slate-400 font-bold uppercase tracking-tight">${Math.round(nearest.distance)}m to</span>
+                                        <span style="${nameStyle}" class="text-xs font-bold truncate max-w-[80px]">${nearest.name}</span>
+                                    </div>
                                 </div>
                             `;
                 })()}
-                        <hr class="border-slate-100 my-2">
-                        <div class="space-y-2">${tagHTML}</div>
                     </div>
+
+                    <div class="flex flex-wrap gap-2 mb-4">
+                        ${tagHTML}
+                    </div>
+
+                    ${h.note ? `
+                        <div class="mt-4 p-3 bg-blue-50/50 rounded-xl border border-blue-100/50">
+                            <p class="text-xs text-slate-600 leading-relaxed italic">"${h.note}"</p>
+                        </div>
+                    ` : ''}
                 </div>
-                <div class="px-5 py-4 bg-slate-50 border-t border-slate-100 flex justify-between items-start gap-3">
-                    <div class="text-xs text-slate-500 italic leading-relaxed">${h.note || ''}</div>
-                    <a href="https://www.google.com/maps/search/${encodeURIComponent(h.name + ' Singapore')}" target="_blank" class="text-blue-600 font-semibold text-sm hover:underline flex items-center whitespace-nowrap flex-shrink-0 pt-0.5" onclick="event.stopPropagation()">查看地圖<svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg></a>
+                <div class="px-6 py-4 bg-slate-50/50 border-t border-slate-100 flex justify-end">
+                    <a href="https://www.google.com/maps/search/${encodeURIComponent(h.name + ' Singapore')}" 
+                       target="_blank" 
+                       class="inline-flex items-center px-4 py-2 bg-white border border-slate-200 rounded-xl shadow-sm hover:shadow-md hover:border-blue-200 text-blue-600 font-bold text-xs transition-all group" 
+                       onclick="event.stopPropagation()">
+                        Google Maps 
+                        <svg class="w-3.5 h-3.5 ml-2 transform group-hover:translate-x-0.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+                    </a>
                 </div>
             `;
             this.elements.grid.appendChild(card);

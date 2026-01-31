@@ -47,64 +47,99 @@
     </button>
 
     <!-- 主介面容器 -->
-    <div id="mainContent" class="p-4 md:p-8">
+    <div id="mainContent" class="p-6 md:p-12">
         <div class="max-w-6xl mx-auto">
-            <header class="mb-8 text-center relative">
-                <h1 class="text-3xl font-bold text-slate-800 mb-2">新加坡飯店挑選助手</h1>
-                <p class="text-slate-600">根據您的需求篩選最合適的住宿選擇</p>
+            <header class="mb-12 text-center relative pt-4">
+                <div
+                    class="inline-block px-4 py-1.5 mb-4 rounded-full bg-blue-50 text-blue-600 text-sm font-bold tracking-wider uppercase">
+                    Singapore Travel
+                </div>
+                <h1 class="text-4xl md:text-5xl font-extrabold mb-4 tracking-tight">新加坡飯店挑選助手</h1>
+                <p class="text-slate-500 text-lg max-w-2xl mx-auto">為您的旅程尋找最完美的住宿。簡單過濾、精準比較，享受新加坡的每一刻。</p>
 
-                <!-- GitHub Login UI (Responsive: Centered on mobile, Absolute on Desktop) -->
+                <!-- GitHub Login UI -->
                 <div id="github-auth-container"
-                    class="flex items-center justify-center gap-3 mt-6 md:mt-0 md:absolute md:top-0 md:right-0">
+                    class="flex items-center justify-center gap-3 mt-8 md:mt-0 md:absolute md:top-4 md:right-0">
                     <div id="user-info"
-                        class="hidden items-center gap-2 bg-white/50 backdrop-blur-sm px-3 py-1.5 rounded-full border border-slate-200 shadow-sm">
-                        <img id="user-avatar" class="w-6 h-6 rounded-full border border-slate-200" src=""
+                        class="hidden items-center gap-2 glass px-4 py-2 rounded-full shadow-sm hover:shadow-md transition-shadow">
+                        <img id="user-avatar" class="w-7 h-7 rounded-full border-2 border-white shadow-sm" src=""
                             alt="User Avatar">
-                        <span id="user-login" class="text-xs font-bold text-slate-700"></span>
-                        <div class="w-px h-3 bg-slate-300 mx-1"></div>
+                        <span id="user-login" class="text-sm font-bold text-slate-700"></span>
+                        <div class="w-px h-4 bg-slate-300 mx-2"></div>
                         <button id="add-hotel-btn"
-                            class="text-xs text-blue-600 hover:text-blue-700 font-bold transition-colors">新增飯店</button>
-                        <div class="w-px h-3 bg-slate-300 mx-1"></div>
+                            class="text-sm text-blue-600 hover:text-blue-700 font-bold transition-colors">新增飯店</button>
+                        <div class="w-px h-4 bg-slate-300 mx-2"></div>
                         <button id="logout-btn"
-                            class="text-xs text-slate-500 hover:text-red-600 font-medium transition-colors">登出</button>
+                            class="text-sm text-slate-400 hover:text-red-500 font-semibold transition-colors">登出</button>
                     </div>
                     <button id="login-btn"
-                        class="hidden bg-slate-800 text-white px-4 py-2 rounded-xl text-sm font-bold hover:bg-slate-900 transition-all active:scale-95 shadow-lg shadow-slate-200 flex items-center">
-                        <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 24 24">
+                        class="hidden bg-slate-900 text-white px-5 py-2 rounded-full text-sm font-bold hover:bg-black transition-all active:scale-95 shadow-lg shadow-slate-200 flex items-center group">
+                        <svg class="w-4 h-4 mr-2 text-blue-400 group-hover:text-blue-300 transition-colors"
+                            fill="currentColor" viewBox="0 0 24 24">
                             <path
                                 d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z" />
                         </svg>
-                        以 GitHub 編輯
+                        GitHub 登入
                     </button>
                 </div>
             </header>
 
-            <div class="bg-white p-6 rounded-2xl shadow-sm mb-8">
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-                    <div>
-                        <label class="block text-sm font-bold text-slate-700 mb-3">最高預算 ($)</label>
+            <div class="filter-container p-8 rounded-3xl mb-12">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-10">
+                    <div class="space-y-4">
+                        <div class="flex justify-between items-center">
+                            <label class="text-sm font-bold text-slate-800 flex items-center gap-2">
+                                <svg class="w-4 h-4 text-blue-500" fill="none" stroke="currentColor"
+                                    viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                                最高預算
+                            </label>
+                            <span id="priceDisplay"
+                                class="font-bold text-blue-600 bg-blue-50 px-2.5 py-0.5 rounded-lg text-sm transition-all">無限制</span>
+                        </div>
                         <input type="range" id="priceRange" min="4000" max="9000" step="100" value="9000"
-                            class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-blue-600">
-                        <div class="flex justify-between text-xs text-slate-500 mt-2">
+                            class="w-full h-1.5 bg-slate-100 rounded-lg appearance-none cursor-pointer accent-blue-600">
+                        <div class="flex justify-between text-[10px] text-slate-400 font-medium px-1">
                             <span>$4,000</span>
-                            <span id="priceDisplay" class="font-bold text-blue-600 text-sm">無限制</span>
+                            <span>$9,000+</span>
                         </div>
                     </div>
 
-                    <div>
-                        <label class="block text-sm font-bold text-slate-700 mb-3">捷運站距離</label>
+                    <div class="space-y-4">
+                        <div class="flex justify-between items-center">
+                            <label class="text-sm font-bold text-slate-800 flex items-center gap-2">
+                                <svg class="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor"
+                                    viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                                </svg>
+                                捷運站距離
+                            </label>
+                            <span id="mrtDistanceDisplay"
+                                class="font-bold text-emerald-600 bg-emerald-50 px-2.5 py-0.5 rounded-lg text-sm transition-all">不限距離</span>
+                        </div>
                         <input type="range" id="mrtDistanceRange" min="50" max="1000" step="50" value="1000"
-                            class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-emerald-500">
-                        <div class="flex justify-between text-xs text-slate-500 mt-2">
+                            class="w-full h-1.5 bg-slate-100 rounded-lg appearance-none cursor-pointer accent-emerald-500">
+                        <div class="flex justify-between text-[10px] text-slate-400 font-medium px-1">
                             <span>50m</span>
-                            <span id="mrtDistanceDisplay" class="font-bold text-emerald-500 text-sm">不限距離</span>
+                            <span>1km+</span>
                         </div>
                     </div>
 
-                    <div>
-                        <label class="block text-sm font-bold text-slate-700 mb-3">最小房間空間</label>
+                    <div class="space-y-4">
+                        <label class="text-sm font-bold text-slate-800 flex items-center gap-2">
+                            <svg class="w-4 h-4 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                            </svg>
+                            最小房間空間
+                        </label>
                         <select id="sizeFilter"
-                            class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+                            class="w-full bg-slate-50 border-none rounded-xl px-4 py-2.5 text-sm font-semibold focus:ring-2 focus:ring-blue-500 outline-none shadow-sm transition-all cursor-pointer hover:bg-slate-100">
                             <option value="0">🏠 不限大小</option>
                             <option value="15">🏠 15+ 平方公尺</option>
                             <option value="20">🏠 20+ 平方公尺</option>
@@ -113,68 +148,73 @@
                     </div>
                 </div>
 
-                <hr class="my-6 border-slate-100">
-
-                <div>
-                    <label class="block text-sm font-bold text-slate-700 mb-4 text-center md:text-left">優選條件過濾
-                        (勾選將隱藏負面狀況或資訊不明者)</label>
-                    <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
-                        <div
-                            class="flex items-center p-2 bg-slate-50 rounded-lg border border-transparent hover:border-slate-200 transition-all">
-                            <input type="checkbox" id="cancelableOnly"
-                                class="w-4 h-4 text-blue-600 border-slate-300 rounded focus:ring-blue-500">
-                            <label for="cancelableOnly" class="ml-2 text-xs md:text-sm text-slate-600 cursor-pointer">✨
-                                免費取消</label>
+                <div class="mt-10 pt-8 border-t border-slate-100">
+                    <div class="flex flex-col md:flex-row md:items-center justify-between gap-6">
+                        <div class="flex items-center gap-3">
+                            <div class="w-1.5 h-6 bg-blue-600 rounded-full"></div>
+                            <h3 class="text-sm font-bold text-slate-800">優選條件過濾</h3>
+                            <span
+                                class="text-[10px] font-bold text-slate-400 bg-slate-50 px-2 py-0.5 rounded-md uppercase tracking-wide">Options</span>
                         </div>
                         <div
-                            class="flex items-center p-2 bg-slate-50 rounded-lg border border-transparent hover:border-slate-200 transition-all">
-                            <input type="checkbox" id="safeAreaFilter"
-                                class="w-4 h-4 text-blue-600 border-slate-300 rounded focus:ring-blue-500">
-                            <label for="safeAreaFilter" class="ml-2 text-xs md:text-sm text-slate-600 cursor-pointer">🔴
-                                不靠近紅燈區</label>
-                        </div>
-                        <div
-                            class="flex items-center p-2 bg-slate-50 rounded-lg border border-transparent hover:border-slate-200 transition-all">
-                            <input type="checkbox" id="goodSoundFilter"
-                                class="w-4 h-4 text-blue-600 border-slate-300 rounded focus:ring-blue-500">
-                            <label for="goodSoundFilter"
-                                class="ml-2 text-xs md:text-sm text-slate-600 cursor-pointer">🔊
-                                隔音良好</label>
-                        </div>
-                        <div
-                            class="flex items-center p-2 bg-slate-50 rounded-lg border border-transparent hover:border-slate-200 transition-all">
-                            <input type="checkbox" id="realBedFilter"
-                                class="w-4 h-4 text-blue-600 border-slate-300 rounded focus:ring-blue-500">
-                            <label for="realBedFilter" class="ml-2 text-xs md:text-sm text-slate-600 cursor-pointer">🛋️
-                                非沙發床</label>
-                        </div>
-                        <div
-                            class="flex items-center p-2 bg-slate-50 rounded-lg border border-transparent hover:border-slate-200 transition-all">
-                            <input type="checkbox" id="plentyOutletsFilter"
-                                class="w-4 h-4 text-blue-600 border-slate-300 rounded focus:ring-blue-500">
-                            <label for="plentyOutletsFilter"
-                                class="ml-2 text-xs md:text-sm text-slate-600 cursor-pointer">🔌 插座充足</label>
-                        </div>
-                        <div
-                            class="flex items-center p-2 bg-slate-50 rounded-lg border border-transparent hover:border-slate-200 transition-all">
-                            <input type="checkbox" id="wifiFilter"
-                                class="w-4 h-4 text-blue-600 border-slate-300 rounded focus:ring-blue-500">
-                            <label for="wifiFilter" class="ml-2 text-xs md:text-sm text-slate-600 cursor-pointer">📶
-                                WiFi</label>
-                        </div>
-                        <div
-                            class="flex items-center p-2 bg-slate-50 rounded-lg border border-transparent hover:border-slate-200 transition-all">
-                            <input type="checkbox" id="poolFilter"
-                                class="w-4 h-4 text-blue-600 border-slate-300 rounded focus:ring-blue-500">
-                            <label for="poolFilter" class="ml-2 text-xs md:text-sm text-slate-600 cursor-pointer">🏊
-                                游泳池</label>
-                        </div>
-                        <div
-                            class="flex items-center p-2 bg-slate-50 rounded-lg border border-transparent hover:border-slate-200 transition-all">
-                            <input type="checkbox" id="washerFilter"
-                                class="w-4 h-4 text-blue-600 border-slate-300 rounded focus:ring-blue-500">
-                            <label for="washerFilter" class="ml-2 text-xs md:text-sm text-slate-600 cursor-pointer">🧺
-                                洗衣機</label>
+                            class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-4 xl:grid-cols-8 gap-3 flex-grow max-w-5xl">
+                            <div
+                                class="filter-checkbox-container flex items-center p-2 rounded-xl border border-slate-100 cursor-pointer">
+                                <input type="checkbox" id="cancelableOnly"
+                                    class="w-4 h-4 text-blue-600 border-slate-300 rounded focus:ring-blue-500 cursor-pointer">
+                                <label for="cancelableOnly"
+                                    class="ml-2 text-[11px] font-bold text-slate-600 cursor-pointer select-none">免費取消</label>
+                            </div>
+                            <div
+                                class="filter-checkbox-container flex items-center p-2 rounded-xl border border-slate-100 cursor-pointer">
+                                <input type="checkbox" id="safeAreaFilter"
+                                    class="w-4 h-4 text-blue-600 border-slate-300 rounded focus:ring-blue-500 cursor-pointer">
+                                <label for="safeAreaFilter"
+                                    class="ml-2 text-[11px] font-bold text-slate-600 cursor-pointer select-none">安全區域</label>
+                            </div>
+                            <div
+                                class="filter-checkbox-container flex items-center p-2 rounded-xl border border-slate-100 cursor-pointer">
+                                <input type="checkbox" id="goodSoundFilter"
+                                    class="w-4 h-4 text-blue-600 border-slate-300 rounded focus:ring-blue-500 cursor-pointer">
+                                <label for="goodSoundFilter"
+                                    class="ml-2 text-[11px] font-bold text-slate-600 cursor-pointer select-none">隔音良好</label>
+                            </div>
+                            <div
+                                class="filter-checkbox-container flex items-center p-2 rounded-xl border border-slate-100 cursor-pointer">
+                                <input type="checkbox" id="realBedFilter"
+                                    class="w-4 h-4 text-blue-600 border-slate-300 rounded focus:ring-blue-500 cursor-pointer">
+                                <label for="realBedFilter"
+                                    class="ml-2 text-[11px] font-bold text-slate-600 cursor-pointer select-none">非沙發床</label>
+                            </div>
+                            <div
+                                class="filter-checkbox-container flex items-center p-2 rounded-xl border border-slate-100 cursor-pointer">
+                                <input type="checkbox" id="plentyOutletsFilter"
+                                    class="w-4 h-4 text-blue-600 border-slate-300 rounded focus:ring-blue-500 cursor-pointer">
+                                <label for="plentyOutletsFilter"
+                                    class="ml-2 text-[11px] font-bold text-slate-600 cursor-pointer select-none">插座充足</label>
+                            </div>
+                            <div
+                                class="filter-checkbox-container flex items-center p-2 rounded-xl border border-slate-100 cursor-pointer">
+                                <input type="checkbox" id="wifiFilter"
+                                    class="w-4 h-4 text-blue-600 border-slate-300 rounded focus:ring-blue-500 cursor-pointer">
+                                <label for="wifiFilter"
+                                    class="ml-2 text-[11px] font-bold text-slate-600 cursor-pointer select-none">有
+                                    WiFi</label>
+                            </div>
+                            <div
+                                class="filter-checkbox-container flex items-center p-2 rounded-xl border border-slate-100 cursor-pointer">
+                                <input type="checkbox" id="poolFilter"
+                                    class="w-4 h-4 text-blue-600 border-slate-300 rounded focus:ring-blue-500 cursor-pointer">
+                                <label for="poolFilter"
+                                    class="ml-2 text-[11px] font-bold text-slate-600 cursor-pointer select-none">游泳池</label>
+                            </div>
+                            <div
+                                class="filter-checkbox-container flex items-center p-2 rounded-xl border border-slate-100 cursor-pointer">
+                                <input type="checkbox" id="washerFilter"
+                                    class="w-4 h-4 text-blue-600 border-slate-300 rounded focus:ring-blue-500 cursor-pointer">
+                                <label for="washerFilter"
+                                    class="ml-2 text-[11px] font-bold text-slate-600 cursor-pointer select-none">洗衣機</label>
+                            </div>
                         </div>
                     </div>
                 </div>
